@@ -1,0 +1,638 @@
+import React, { useState, useEffect, useRef, useCallback, memo, useMemo, useReducer } from 'react';
+
+// --- CONFIG & DATA ---
+// Centralized configuration for the application's lesson structure.
+const lessonPlanData = [
+{ id: 'intro', isSpecial: true, icon: '💼', title: 'Multimodal AI for Professionals' },
+{ id: 'text-to-image', icon: '🖼️', title: 'Module 1: Text → Image', learn: { what: "This AI function transforms your written descriptions (prompts) into unique, custom images. You are essentially commissioning an infinitely fast artist who can create anything you can describe.", why: ["<b>Marketing & Branding:</b> Generate on-brand visuals for social media campaigns, ad creatives, and website banners without needing a graphic designer.", "<b>Product Design:</b> Create rapid prototypes and mock-ups of products, user interfaces, or physical spaces for presentations and stakeholder feedback.", "<b>Data Visualization:</b> Conceptualize complex data sets or processes into digestible infographics and charts for reports and presentations."] }, reflect: "How can you craft prompts that not only generate an image but also align with a specific brand identity (e.g., 'minimalist', 'luxurious', 'playful')? How can you ensure visual consistency across a series of generated images for a single campaign?", },
+{ id: 'image-to-text', icon: '📝', title: 'Module 2: Image → Text', learn: { what: "This function analyzes a provided image and generates a textual description, summary, or analysis based on your instructions. It's like having an expert observer who can articulate what they see.", why: ["<b>Market Research:</b> Upload competitor advertisements or social media posts and prompt the AI to analyze their visual strategy, target audience, and messaging.", "<b>Technical Documentation:</b> Generate step-by-step descriptions from screenshots for user manuals or training guides.", "<b>Data Analysis:</b> Extract key information and trends from charts, graphs, and other data visualizations within reports."] }, reflect: "How can you prompt the AI to move beyond simple description to genuine analysis? Consider prompts like 'Analyze the emotional impact of this image' or 'Identify the key marketing message in this advertisement.' How can you tailor the output for different audiences (e.g., an executive summary vs. a detailed report for an analyst)?", },
+{ id: 'text-to-audio', icon: '🔊', title: 'Module 3: Text → Audio', learn: { what: "This technology converts written text into natural-sounding spoken audio. You can control the voice, tone, and pacing through your prompts.", why: ["<b>Corporate Training:</b> Develop scalable, consistent voiceovers for e-learning modules and employee onboarding videos.", "<b>Product Demos:</b> Create clear, professional narration for software tutorials and product demonstration videos.", "<b>Accessibility:</b> Produce audio versions of internal communications, reports, and marketing materials to meet accessibility standards (WCAG)."] }, reflect: "A brand has a voice. How can you use prompts to ensure the AI's delivery matches your company's brand voice (e.g., 'authoritative and formal' vs. 'friendly and casual')? How can you use punctuation and phonetic spellings to fine-tune pronunciation and pacing for technical jargon?", },
+{ id: 'text-to-video', icon: '🎥', title: 'Module 4: Text → Video', learn: { what: "You provide a text description, and the AI generates a short video or animation.", why: ["Creating explainer animations", "Producing quick visual concepts for storyboards or ads"] }, reflect: "How could you use this to create a short, engaging social media ad for a new product? What details would you include in the prompt to ensure the video aligns with a specific brand style?" },
+{ id: 'video-to-text', icon: '✍️', title: 'Module 5: Video → Text', learn: { what: "You provide a video, and the AI describes or summarizes it.", why: ["Creating summaries of recorded meetings or events", "Generating captions or scripts from video for accessibility and content repurposing"] }, reflect: "Beyond simple summarization, how could you use this to analyze video content? For example, could you prompt it to identify the speaker's tone or the key visual elements in a marketing video?" },
+{ id: 'workflow-challenge', icon: '🚀', title: 'Capstone Project: Your Professional Scenario', isSpecial: true },
+{ id: 'conclusion', isSpecial: true, icon: '✅', title: 'Module Complete' },
+];
+
+// Defines which tasks contribute to the progress bar.
+const TRACKABLE_ITEMS = ['text-to-image', 'image-to-text', 'text-to-audio', 'text-to-video', 'video-to-text', 'workflow-image', 'workflow-analysis', 'workflow-audio'];
+
+
+// --- ICONS (SVG Components) ---
+const PrintIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>;
+const CertificateIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15.23 2.77L14.24 4.31C13.84 5.03 14.34 6 15.17 6H17a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1.83c.83 0 1.33-.97.93-1.69L8.77 2.77a2 2 0 0 1 3.46 0z"/><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M12 12v3"/></svg>;
+const LightbulbIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>;
+const MinusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
+const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
+const ExternalLinkIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
+
+// --- UTILS & HELPERS ---
+const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+for (let i = 0; i < retries; i++) {
+try {
+const response = await fetch(url, options);
+if (response.ok) return response.json();
+if (response.status >= 400 && response.status < 500) {
+const errorData = await response.json().catch(() => ({}));
+throw new Error(`API Error: ${response.status}. ${errorData?.error?.message || 'Please check your request.'}`);
+}
+if (i < retries - 1) {
+await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+} else {
+throw new Error(`Server Error: ${response.status}. Please try again later.`);
+}
+} catch (error) {
+if (error.message.startsWith("API Error")) {
+throw error;
+}
+if (i < retries - 1) {
+await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+} else {
+throw error;
+}
+}
+}
+};
+
+const base64ToArrayBuffer = (base64) => {
+const binaryString = window.atob(base64);
+const len = binaryString.length;
+const bytes = new Uint8Array(len);
+for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
+return bytes.buffer;
+};
+
+const pcmToWav = (pcmData, sampleRate) => {
+const numSamples = pcmData.length;
+const buffer = new ArrayBuffer(44 + numSamples * 2);
+const view = new DataView(buffer);
+const numChannels = 1, bytesPerSample = 2, blockAlign = numChannels * bytesPerSample;
+const byteRate = sampleRate * blockAlign, dataSize = numSamples * blockAlign;
+view.setUint32(0, 0x52494646, false); view.setUint32(4, 36 + dataSize, true); view.setUint32(8, 0x57415645, false); view.setUint32(12, 0x666d7420, false); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true); view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true); view.setUint16(34, 16, true); view.setUint32(36, 0x64617461, false); view.setUint32(40, dataSize, true);
+for (let i = 0; i < pcmData.length; i++) { view.setInt16(44 + i * 2, pcmData[i], true); }
+return new Blob([view], { type: 'audio/wav' });
+};
+
+// --- STATE MANAGEMENT (REDUCER) ---
+const initialUserData = {};
+
+function userDataReducer(state, action) {
+switch (action.type) {
+case 'UPDATE_TASK': {
+const { id, data } = action.payload;
+return {
+...state,
+[id]: {
+...state[id],
+...data,
+},
+};
+}
+case 'RESET':
+return initialUserData;
+default:
+throw new Error(`Unhandled action type: ${action.type}`);
+}
+}
+
+
+// --- UI COMPONENTS ---
+const LoadingSpinner = () => <div className="flex justify-center items-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div></div>;
+const ErrorMessage = ({ message }) => <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert"><p className="font-bold">An Error Occurred</p><p>{message}</p></div>;
+
+const ProgressBar = memo(({ progress }) => (
+<div className="w-full bg-slate-200 rounded-full h-2.5">
+<div
+className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2.5 rounded-full transition-all duration-500 ease-out"
+style={{ width: `${progress}%` }}
+></div>
+</div>
+));
+
+const FontSizeControl = memo(({ fontSize, onFontSizeChange }) => {
+const FONT_MIN = 14;
+const FONT_MAX = 22;
+const FONT_STEP = 1;
+
+const increaseFont = () => onFontSizeChange(current => Math.min(FONT_MAX, current + FONT_STEP));
+const decreaseFont = () => onFontSizeChange(current => Math.max(FONT_MIN, current - FONT_STEP));
+
+return (
+<div className="flex items-center gap-2">
+<button onClick={decreaseFont} disabled={fontSize <= FONT_MIN} className="p-1 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Decrease font size">
+<MinusIcon />
+</button>
+<span className="text-sm font-medium w-10 text-center" aria-live="polite">Size: {fontSize}</span>
+<button onClick={increaseFont} disabled={fontSize >= FONT_MAX} className="p-1 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Increase font size">
+<PlusIcon />
+</button>
+</div>
+);
+});
+
+const WelcomeSection = memo(({ userName, onUserNameChange, onStart }) => {
+return (
+<div className="text-center py-20 min-h-screen flex flex-col justify-center items-center px-4">
+<h1 className="font-poppins text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">Go Beyond with AI</h1>
+<p className="mt-4 text-2xl md:text-3xl font-poppins font-semibold text-slate-700">Multimodality with Generative AI</p>
+<p className="mt-2 text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">A professional development module for mastering the art and science of AI communication.</p>
+<div className="mt-12 w-full max-w-md mx-auto">
+<input
+type="text"
+value={userName}
+onChange={(e) => onUserNameChange(e.target.value)}
+placeholder="Please enter your full name"
+className="w-full px-4 py-3 text-lg text-center border-2 border-slate-300 bg-white/50 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+aria-label="Full Name Input"
+/>
+<button
+onClick={onStart}
+disabled={!userName.trim()}
+className="w-full mt-4 px-8 py-4 text-lg font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-md hover:shadow-xl hover:scale-105 disabled:from-slate-400 disabled:to-slate-400 disabled:cursor-not-allowed transition-all duration-300"
+>
+Begin Module
+</button>
+</div>
+</div>
+);
+});
+
+const AnimatedSection = memo(({ children }) => {
+const ref = useRef(null);
+const [isVisible, setIsVisible] = useState(false);
+useEffect(() => {
+const observer = new IntersectionObserver(([entry]) => {
+if (entry.isIntersecting) {
+setIsVisible(true);
+observer.unobserve(entry.target);
+}
+}, { threshold: 0.1 });
+const currentRef = ref.current;
+if (currentRef) { observer.observe(currentRef); }
+return () => { if (currentRef) { observer.unobserve(currentRef); } };
+}, []);
+return (
+<div ref={ref} className={`transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+{children}
+</div>
+);
+});
+
+const ModuleSection = memo(({ icon, title, children }) => (
+<section className="bg-white/50 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-shadow duration-300 rounded-xl border border-slate-200 mb-12 overflow-hidden">
+<header className="flex items-center gap-4 p-6 border-b border-slate-200 bg-white/30">
+<div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white shadow-lg text-2xl">{icon}</div>
+<h2 className="font-poppins text-2xl font-bold text-slate-800">{title}</h2>
+</header>
+<div className="p-6 md:p-8">{children}</div>
+</section>
+));
+
+// --- LAB COMPONENTS ---
+const TextToImageLab = memo(({ defaultPrompt, onUpdate, taskId }) => {
+const [prompt, setPrompt] = useState(defaultPrompt);
+const [image, setImage] = useState(null);
+const [isLoading, setIsLoading] = useState(false);
+const [error, setError] = useState(null);
+useEffect(() => { onUpdate(taskId, { prompt }); }, [prompt, onUpdate, taskId]);
+const generateImage = useCallback(async () => {
+if (!prompt) return;
+setIsLoading(true); setError(null);
+const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+const payload = { instances: [{ prompt }], parameters: { "sampleCount": 1 } };
+try {
+const result = await fetchWithRetry(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+if (result.predictions?.[0]?.bytesBase64Encoded) {
+const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+setImage(imageUrl); onUpdate(taskId, { prompt, output: imageUrl });
+} else { throw new Error("Image data not found in API response."); }
+} catch (err) {
+setError(err.message || "Failed to generate image.");
+} finally {
+setIsLoading(false);
+}
+}, [prompt, onUpdate, taskId]);
+return (
+<div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+<div className="flex flex-col space-y-4">
+<label htmlFor={`${taskId}-prompt`} className="font-semibold text-slate-800">Your Prompt:</label>
+<textarea id={`${taskId}-prompt`} value={prompt} onChange={(e) => setPrompt(e.target.value)} className="w-full h-40 p-3 border rounded-lg bg-white border-slate-300 focus:ring-2 focus:ring-indigo-500" />
+<button onClick={generateImage} disabled={isLoading} className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors">{isLoading ? 'Generating...' : 'Generate Image'}</button>
+{error && <ErrorMessage message={error} />}
+</div>
+<div className="bg-slate-100 rounded-lg p-4 flex items-center justify-center min-h-[300px] border">
+{isLoading && <LoadingSpinner />}
+{!isLoading && image && <img src={image} alt="Generated" className="max-w-full max-h-full object-contain rounded-md shadow-lg" />}
+{!isLoading && !image && <div className="text-center text-slate-500">Your generated image will appear here.</div>}
+</div>
+</div>
+);
+});
+
+const ImageToTextLab = memo(({ defaultPrompt, onUpdate, taskId }) => {
+const [prompt, setPrompt] = useState(defaultPrompt);
+const [imageFile, setImageFile] = useState(null);
+const [imageBase64, setImageBase64] = useState(null);
+const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+const [description, setDescription] = useState('');
+const [isLoading, setIsLoading] = useState(false);
+const [error, setError] = useState(null);
+
+useEffect(() => { onUpdate(taskId, { prompt, output: description }); }, [prompt, description, onUpdate, taskId]);
+
+useEffect(() => {
+return () => {
+if (imagePreviewUrl) {
+URL.revokeObjectURL(imagePreviewUrl);
+}
+};
+}, [imagePreviewUrl]);
+
+const handleImageUpload = useCallback((e) => {
+const file = e.target.files[0];
+if (file) {
+setImageFile(file);
+const reader = new FileReader();
+reader.onloadend = () => {
+const b64 = reader.result.split(',')[1];
+setImageBase64(b64);
+const newUrl = URL.createObjectURL(file);
+setImagePreviewUrl(newUrl);
+onUpdate(taskId, { prompt, output: description, image: newUrl });
+};
+reader.readAsDataURL(file);
+}
+}, [onUpdate, taskId, prompt, description]);
+
+const generateText = useCallback(async () => {
+if (!prompt || !imageBase64) { setError("Please upload an image and provide a prompt."); return; }
+setIsLoading(true); setError(null);
+const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+const payload = { contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: imageFile.type, data: imageBase64 } }] }] };
+try {
+const result = await fetchWithRetry(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+if (result.candidates?.[0]?.content?.parts[0]?.text) {
+const newDescription = result.candidates[0].content.parts[0].text;
+setDescription(newDescription);
+onUpdate(taskId, { prompt, output: newDescription, image: imagePreviewUrl });
+} else { throw new Error("Text not found in API response."); }
+} catch (err) {
+setError(err.message || "Failed to generate description.");
+} finally {
+setIsLoading(false);
+}
+}, [prompt, imageBase64, imageFile, onUpdate, taskId, imagePreviewUrl]);
+
+return (
+<div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+<div className="flex flex-col space-y-4">
+<label className="w-full h-48 bg-slate-100 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center relative text-slate-500 cursor-pointer hover:border-indigo-500 hover:text-indigo-500 transition-colors">
+{imagePreviewUrl ? <img src={imagePreviewUrl} alt="Upload preview" className="max-w-full max-h-full object-contain p-2"/> : <div>Click or drag to upload image</div>}
+<input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"/>
+</label>
+<label htmlFor={`${taskId}-prompt`} className="font-semibold text-slate-800">Your Prompt:</label>
+<textarea id={`${taskId}-prompt`} value={prompt} onChange={(e) => setPrompt(e.target.value)} className="w-full h-24 p-3 border rounded-lg bg-white border-slate-300 focus:ring-2 focus:ring-indigo-500"/>
+<button onClick={generateText} disabled={isLoading || !imageFile} className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors">{isLoading ? 'Generating...' : 'Generate Description'}</button>
+{error && <ErrorMessage message={error} />}
+</div>
+<div className="bg-slate-100 rounded-lg p-4 flex flex-col min-h-[300px] border">
+{isLoading ? <LoadingSpinner /> : <div className="prose max-w-none text-slate-800 flex-grow overflow-y-auto">{description ? <p>{description}</p> : <div className="text-center text-slate-500 pt-24">Your generated text will appear here.</div>}</div>}
+</div>
+</div>
+);
+});
+
+const TextToAudioLab = memo(({ defaultPrompt, onUpdate, taskId }) => {
+const [script, setScript] = useState(defaultPrompt);
+const [audioUrl, setAudioUrl] = useState(null);
+const [isLoading, setIsLoading] = useState(false);
+const [error, setError] = useState(null);
+useEffect(() => { onUpdate(taskId, { prompt: script }); }, [script, onUpdate, taskId]);
+
+useEffect(() => { return () => { if (audioUrl) URL.revokeObjectURL(audioUrl); }; }, [audioUrl]);
+
+const generateAudio = useCallback(async () => {
+if (!script) return;
+setIsLoading(true); setError(null); setAudioUrl(null);
+const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+const payload = { contents: [{ parts: [{ text: script }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } } }, model: "gemini-2.5-flash-preview-tts" };
+try {
+const result = await fetchWithRetry(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+const part = result?.candidates?.[0]?.content?.parts?.[0];
+if (part?.inlineData?.data && part.inlineData.mimeType.startsWith("audio/")) {
+const sampleRate = parseInt(part.inlineData.mimeType.match(/rate=(\d+)/)?.[1] || "24000", 10);
+const pcmData = new Int16Array(base64ToArrayBuffer(part.inlineData.data));
+const wavBlob = pcmToWav(pcmData, sampleRate);
+const url = URL.createObjectURL(wavBlob);
+setAudioUrl(url);
+onUpdate(taskId, { prompt: script, output: url });
+} else { throw new Error("Audio data not found in API response."); }
+} catch (err) {
+setError(err.message || "Failed to generate audio.");
+} finally {
+setIsLoading(false);
+}
+}, [script, onUpdate, taskId]);
+
+return (
+<div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+<div className="flex flex-col space-y-4">
+<label htmlFor={`${taskId}-script`} className="font-semibold text-slate-800">Your Script:</label>
+<textarea id={`${taskId}-script`} value={script} onChange={(e) => setScript(e.target.value)} className="w-full h-40 p-3 border rounded-lg bg-white border-slate-300 focus:ring-2 focus:ring-indigo-500"/>
+<p className="text-sm text-slate-500">Tip: Guide the tone, like "Say in a friendly voice: ..."</p>
+<button onClick={generateAudio} disabled={isLoading} className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors">{isLoading ? 'Generating...' : 'Generate Audio'}</button>
+{error && <ErrorMessage message={error} />}
+</div>
+<div className="bg-slate-100 rounded-lg p-4 flex items-center justify-center min-h-[300px] border">
+{isLoading && <LoadingSpinner />}
+{!isLoading && audioUrl && <div className="text-center w-full"><p className="font-semibold mb-4 text-slate-800">Audio Ready</p><audio controls src={audioUrl} className="w-full" /></div>}
+{!isLoading && !audioUrl && <div className="text-center text-slate-500">Your generated audio will appear here.</div>}
+</div>
+</div>
+);
+});
+
+const AIStudioPractice = memo(({ title, description, examplePrompt, onUpdate, taskId, reflectionQuestion }) => {
+const [userPrompt, setUserPrompt] = useState('');
+const [reflection, setReflection] = useState('');
+
+useEffect(() => {
+const output = userPrompt ? { completed: true } : null;
+onUpdate(taskId, { prompt: userPrompt, reflection, output });
+}, [userPrompt, reflection, onUpdate, taskId]);
+
+return (
+<div className="space-y-6">
+<div className="prose max-w-none">
+<p>{description}</p>
+<h4 className="font-poppins text-slate-900">Example Prompt</h4>
+<blockquote className="border-l-4 border-indigo-300 pl-4 italic text-slate-700">
+{examplePrompt}
+</blockquote>
+</div>
+<a
+href="https://aistudio.google.com/"
+target="_blank"
+rel="noopener noreferrer"
+className="inline-flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 font-bold text-lg text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+>
+Practice in Google AI Studio
+<ExternalLinkIcon />
+</a>
+<div className="space-y-4 pt-4 border-t border-slate-200">
+<div>
+<label htmlFor={`${taskId}-prompt`} className="font-semibold text-slate-800 block mb-2">Your Turn: {title}</label>
+<textarea
+id={`${taskId}-prompt`}
+value={userPrompt}
+onChange={(e) => setUserPrompt(e.target.value)}
+className="w-full h-24 p-3 border rounded-lg bg-white border-slate-300 focus:ring-2 focus:ring-indigo-500"
+placeholder="Enter your prompt here..."
+/>
+</div>
+<div>
+<label htmlFor={`${taskId}-reflection`} className="font-semibold text-slate-800 block mb-2">Reflection: {reflectionQuestion}</label>
+<textarea
+id={`${taskId}-reflection`}
+value={reflection}
+onChange={(e) => setReflection(e.target.value)}
+className="w-full h-24 p-3 border rounded-lg bg-white border-slate-300 focus:ring-2 focus:ring-indigo-500"
+placeholder="What were the results? What would you change next time?"
+/>
+</div>
+</div>
+</div>
+);
+});
+
+const LessonContent = memo(({ section, practiceComponent, onReflectionUpdate, reflection }) => {
+const [activeTab, setActiveTab] = useState('learn');
+return (
+<>
+<div className="flex border-b mb-6 border-slate-200">
+<button onClick={() => setActiveTab('learn')} className={`px-4 py-2 font-poppins font-semibold transition-colors ${activeTab === 'learn' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>Learn</button>
+<button onClick={() => setActiveTab('practice')} className={`px-4 py-2 font-poppins font-semibold transition-colors ${activeTab === 'practice' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>Practice</button>
+<button onClick={() => setActiveTab('reflect')} className={`px-4 py-2 font-poppins font-semibold transition-colors ${activeTab === 'reflect' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>Reflect</button>
+</div>
+<div>
+{activeTab === 'learn' && (
+<div className="prose max-w-none prose-a:text-indigo-600">
+<h3 className="font-poppins text-slate-900">What It Is</h3>
+<p className="text-slate-800">{section.learn.what}</p>
+<h3 className="font-poppins mt-6 text-slate-900">Professional Applications</h3>
+<ul className="list-disc pl-5 space-y-2 text-slate-800">{section.learn.why.map((item, index) => <li key={index} dangerouslySetInnerHTML={{ __html: item }}></li>)}</ul>
+</div>
+)}
+{activeTab === 'practice' && practiceComponent}
+{activeTab === 'reflect' && (
+<div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-lg">
+<div className="flex items-start">
+<div className="flex-shrink-0 text-yellow-500"><LightbulbIcon /></div>
+<div className="ml-4 w-full">
+<h3 className="font-poppins text-lg font-semibold text-yellow-900">Strategic Reflection</h3>
+<p className="mt-2 text-yellow-800">{section.reflect}</p>
+<textarea className="mt-4 w-full p-2 border border-yellow-300 rounded-md bg-white focus:ring-2 focus:ring-yellow-500" rows="4" placeholder="Enter your strategic analysis..." value={reflection || ''} onChange={(e) => onReflectionUpdate(e.target.value)} />
+</div>
+</div>
+</div>
+)}
+</div>
+</>
+);
+});
+
+
+// --- CORE APP COMPONENT ---
+const App = () => {
+const [fontSize, setFontSize] = useState(16);
+const [userName, setUserName] = useState('');
+const [moduleStarted, setModuleStarted] = useState(false);
+const [scrolled, setScrolled] = useState(false);
+const [capstoneContext, setCapstoneContext] = useState('');
+
+const [userData, dispatch] = useReducer(userDataReducer, initialUserData);
+
+const handleUserDataUpdate = useCallback((id, data) => {
+dispatch({ type: 'UPDATE_TASK', payload: { id, data } });
+}, []);
+
+useEffect(() => {
+const root = window.document.documentElement;
+root.style.fontSize = `${fontSize}px`;
+}, [fontSize]);
+
+useEffect(() => {
+const handleScroll = () => setScrolled(window.scrollY > 10);
+window.addEventListener('scroll', handleScroll);
+return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+
+const handleStartModule = useCallback(() => {
+if (userName.trim()) {
+setModuleStarted(true);
+}
+}, [userName]);
+
+const handlePrint = (type) => {
+const portfolioEl = document.querySelector('.printable-portfolio');
+const certificateEl = document.querySelector('.printable-certificate');
+if (!portfolioEl || !certificateEl) return;
+
+portfolioEl.classList.toggle('print-this', type === 'portfolio');
+certificateEl.classList.toggle('print-this', type === 'certificate');
+
+window.print();
+};
+
+const progress = useMemo(() => {
+const completedCount = TRACKABLE_ITEMS.reduce((count, key) => {
+return userData[key]?.output ? count + 1 : count;
+}, 0);
+return (completedCount / TRACKABLE_ITEMS.length) * 100;
+}, [userData]);
+
+if (!moduleStarted) {
+return <WelcomeSection userName={userName} onUserNameChange={setUserName} onStart={handleStartModule} />;
+}
+
+const renderPracticeComponent = (section) => {
+const commonProps = { onUpdate: handleUserDataUpdate, taskId: section.id };
+switch (section.id) {
+case 'text-to-image':
+return <TextToImageLab {...commonProps} defaultPrompt="A sleek, professional hero image for a tech startup's website, featuring abstract, glowing data streams and a subtle server rack. Use a blue and dark gray color palette." />;
+case 'image-to-text':
+return <ImageToTextLab {...commonProps} defaultPrompt="Analyze this chart. Summarize the key trend in one sentence. Then, provide three bullet points with specific data to support the summary for a business report." />;
+case 'text-to-audio':
+return <TextToAudioLab {...commonProps} defaultPrompt="Read in a confident, clear, and engaging voice: 'Welcome to our module on cybersecurity best practices. We will cover password security, phishing detection, and secure data handling.'" />;
+case 'text-to-video':
+return <AIStudioPractice {...commonProps} title="Write your own video prompt:" description="For this exercise, you will use an external tool, Google AI Studio, which has advanced video generation capabilities." examplePrompt='"Create a 10-second video animation of a rotating globe with country names appearing in sequence."' reflectionQuestion="Does the video match your instructions?" />;
+case 'video-to-text':
+return <AIStudioPractice {...commonProps} title="Upload a short video and test your own prompt:" description="For this exercise, you will use an external tool, Google AI Studio, which has advanced video analysis capabilities." examplePrompt='"Summarize the key message of this video in under 30 words."' reflectionQuestion="How accurate was the summary?" />;
+default:
+return null;
+}
+};
+
+return (
+<div className="bg-slate-50 font-inter text-slate-800 min-h-screen transition-colors duration-300">
+<style>{`
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600;700&display=swap');
+.font-poppins { font-family: 'Poppins', sans-serif; } .font-inter { font-family: 'Inter', sans-serif; }
+body { background-image: radial-gradient(circle at top right, rgb(127 29 252 / 0.05), transparent 40%), radial-gradient(circle at bottom left, rgb(99 102 241 / 0.05), transparent 50%); }
+@media print {
+@page { size: A4; margin: 0; }
+body, html { background: white !important; color: black !important; font-size: 11pt; }
+.non-printable { display: none !important; }
+.printable-portfolio, .printable-certificate { display: none; }
+.print-this { display: block !important; }
+.module-section-print { page-break-inside: avoid; padding: 0.75in; border-bottom: 1px solid #eee; }
+.portfolio-header-print { padding: 0.75in; text-align: center; border-bottom: 2px solid #ccc; }
+.certificate-container-print { display: flex; align-items: center; justify-content: center; width: 210mm; height: 297mm; padding: 1in; box-sizing: border-box; }
+.certificate-border-print { border: 10px solid; border-image-slice: 1; border-image-source: linear-gradient(to bottom right, #4f46e5, #a855f7); padding: 2rem; width: 100%; height: 100%; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+}
+`}</style>
+
+<header className={`sticky top-0 z-40 transition-all duration-300 non-printable ${scrolled ? 'bg-white/80 backdrop-blur-lg shadow-md' : ''}`}>
+<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+<div className={`flex justify-between items-center ${scrolled ? 'py-2' : 'py-4'}`}>
+<h1 className="font-poppins text-lg md:text-xl font-bold text-slate-800 truncate">Multimodality with Generative AI</h1>
+<div className="flex items-center gap-4">
+<FontSizeControl fontSize={fontSize} onFontSizeChange={setFontSize} />
+<p className="text-sm text-slate-600 hidden sm:block">Welcome, {userName}</p>
+</div>
+</div>
+{scrolled && <div className="pb-2"><ProgressBar progress={progress} /></div>}
+</div>
+</header>
+
+<main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 non-printable">
+{lessonPlanData.map(section => (
+<AnimatedSection key={section.id}>
+<ModuleSection icon={section.icon} title={section.title}>
+{section.id === 'intro' && <p className="prose max-w-none text-center text-lg text-slate-800">Welcome. This module is designed to equip you with the practical skills to leverage multimodal AI in a professional context. Mastering these tools will enhance your productivity, creativity, and ability to communicate effectively. Each section provides foundational knowledge, hands-on practice, and strategic reflection.</p>}
+{section.id === 'conclusion' && <p className="prose max-w-none text-center text-lg text-slate-800">You have successfully completed this professional development module. You now possess a practical framework for using multimodal AI to drive results, enhance creativity, and accelerate your workflows. The next step is to integrate these skills into your daily tasks and projects.</p>}
+{section.id === 'workflow-challenge' &&
+<div className="prose max-w-none">
+<p className="text-slate-800">In this final capstone, you will define your own professional scenario and use the multimodal skills you've learned to create a set of related assets. This is your opportunity to apply everything to a context that is meaningful to you.</p>
+
+<div className="mt-6">
+<label htmlFor="capstone-context" className="font-poppins font-bold text-slate-900 block mb-2">Define Your Project Context</label>
+<textarea
+id="capstone-context"
+value={capstoneContext}
+onChange={(e) => setCapstoneContext(e.target.value)}
+className="w-full h-28 p-3 border rounded-lg bg-white border-slate-300 focus:ring-2 focus:ring-indigo-500"
+placeholder="e.g., 'Developing a short training module for new retail employees on handling customer complaints.' or 'Creating marketing materials for a new eco-friendly coffee brand.' or 'Designing a presentation to pitch a new community garden project to the city council.'"
+/>
+</div>
+
+<h4 className="font-poppins mt-8 text-slate-900">Your Multimodal Workflow</h4>
+<div className="mt-6 space-y-6">
+<div className="p-4 border rounded-lg bg-slate-50 border-slate-200">
+<p className="font-poppins font-bold">1. Core Visual (Text → Image)</p>
+<p className="text-sm text-slate-600 mb-2">Generate a central image that captures the essence of your project.</p>
+<TextToImageLab onUpdate={handleUserDataUpdate} taskId="workflow-image" defaultPrompt="Based on your project context above, describe a powerful and relevant image. Consider the style, mood, key elements, and color palette that would best represent your scenario." />
+</div>
+<div className="p-4 border rounded-lg bg-slate-50 border-slate-200">
+<p className="font-poppins font-bold">2. Contextual Analysis (Image → Text)</p>
+<p className="text-sm text-slate-600 mb-2">Find and upload a relevant image (e.g., a competitor's ad, a photo of your target audience, a chart) and prompt the AI to analyze it for your project.</p>
+<ImageToTextLab onUpdate={handleUserDataUpdate} taskId="workflow-analysis" defaultPrompt="Based on your project context, what analysis would be most useful? For example: 'Analyze the visual strategy of this competitor's ad.' or 'Describe the user needs implied by this photo.' or 'Summarize the key takeaways from this data chart for a non-expert audience.'" />
+</div>
+<div className="p-4 border rounded-lg bg-slate-50 border-slate-200">
+<p className="font-poppins font-bold">3. Key Message (Text → Audio)</p>
+<p className="text-sm text-slate-600 mb-2">Generate a short audio clip of a key message, script, or piece of dialogue for your project.</p>
+<TextToAudioLab onUpdate={handleUserDataUpdate} taskId="workflow-audio" defaultPrompt="Write a script for a core piece of audio for your project. Consider the ideal speaker, tone, and pacing. For example: A confident and reassuring voice for a training module, or an energetic and persuasive voice for a marketing clip." />
+</div>
+</div>
+</div>
+}
+{!section.isSpecial && (
+<LessonContent
+section={section}
+practiceComponent={renderPracticeComponent(section)}
+reflection={userData[section.id]?.reflection}
+onReflectionUpdate={(reflection) => handleUserDataUpdate(section.id, { reflection })}
+/>
+)}
+</ModuleSection>
+</AnimatedSection>
+))}
+<AnimatedSection>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+<button onClick={() => handlePrint('portfolio')} className="flex items-center justify-center gap-3 w-full p-4 font-bold text-lg text-white bg-gradient-to-r from-teal-500 to-cyan-600 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"><PrintIcon /> Print Your Portfolio</button>
+<button onClick={() => handlePrint('certificate')} className="flex items-center justify-center gap-3 w-full p-4 font-bold text-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"><CertificateIcon /> Generate Certificate</button>
+</div>
+</AnimatedSection>
+</main>
+
+<footer className="text-center py-8 px-4 non-printable">
+<p className="text-sm text-slate-500">
+Designed by <a href="https://linkedin.com/in/fajarudinakbar" target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">Fajarudin Akbar</a>
+</p>
+</footer>
+
+{/* Hidden Printable Areas */}
+<div className="hidden printable-portfolio">
+{/* Portfolio Content */}
+</div>
+<div className="hidden printable-certificate">
+<div className="certificate-container-print">
+<div className="certificate-border-print">
+<p className="text-2xl font-semibold text-slate-600">Certificate of Completion</p>
+<p className="text-lg mt-4">This certifies that</p>
+<h1 className="font-poppins text-5xl font-bold text-indigo-800 my-8">{userName || "Participant"}</h1>
+<p className="text-xl">has successfully completed the</p>
+<p className="text-2xl font-poppins font-bold mt-2 text-slate-900">Multimodality with Generative AI</p>
+<p className="text-xl">module.</p>
+<p className="mt-12 text-md text-slate-600">Skills covered include Text-to-Image, Image-to-Text, and Text-to-Audio prompting for professional applications and integrated workflow strategies.</p>
+<div className="flex justify-between mt-auto text-slate-500 text-sm pt-12">
+<p>Date: {new Date().toLocaleDateString('en-GB')}</p>
+<p>ModaLeap Learning</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+);
+};
+
+export default App;
