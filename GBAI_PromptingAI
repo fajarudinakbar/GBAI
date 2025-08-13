@@ -1,0 +1,854 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// --- SVG Icons (with refined styling) ---
+const CheckCircle = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+);
+const XCircle = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="15" y1="9" x2="9" y2="15" />
+        <line x1="9" y1="9" x2="15" y2="15" />
+    </svg>
+);
+const SparklesIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles">
+        <path d="m12 3-1.9 5.8-5.8 1.9 5.8 1.9 1.9 5.8 1.9-5.8 5.8-1.9-5.8-1.9z"/>
+        <path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>
+    </svg>
+);
+
+// --- Thematic Section Icons (Unchanged) ---
+const SectionIcons = {
+    "Start Here": () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+    "Quick Review: What Makes a Good Prompt?": () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1V21c0 .8.7 1.5 1.5 1.5h8c.8 0 1.5-.7 1.5-1.5v-14L15.5 2z"/><path d="M15 2v5h5"/><path d="M10 16s.5-1 2-1 2 1 2 1"/><path d="M10 12s.5-1 2-1 2 1 2 1"/></svg>,
+    "Prompt Types & Patterns": () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 6 4 4-4 4"/><path d="M8 10H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4"/><path d="m12 12 4 4-4 4"/><path d="M20 14h-4a2 2 0 0 0-2-2V8a2 2 0 0 0-2-2H8"/></svg>,
+    "Refinement Task: Make It Better": () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12.83 2.17 4 4L7.5 15.5 2 17l1.5-5.5Z"/><path d="m22 7-1.5-1.5"/></svg>,
+    "Use Case Practice: Personal or Professional Need": () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"/><path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5Z"/><path d="M12 12v10"/></svg>,
+    "Optional Prompt Challenge": () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5c-1.7 0-3.2.8-4.2 2.1-.5.7-.8 1.5-.8 2.4 0 1.4.9 2.7 2.2 3.2l.4.2c.2.1.3.2.4.4l.2.4c.1.2.2.4.2.6v2.1c0 .6.4 1 1 1h2c.6 0 1-.4 1-1v-2.1c0-.2.1-.4.2-.6l.2-.4c.1-.2.2-.3.4-.4l.4-.2c1.3-.5 2.2-1.8 2.2-3.2 0-.9-.3-1.7-.8-2.4C15.2 5.8 13.7 5 12 5z"/><path d="M12 5V2"/><path d="M5.2 7.2C4 8.4 2.5 9 2.5 11c0 2.2 1.8 4 4 4h11c2.2 0 4-1.8 4-4 0-2-1.5-3.6-2.7-3.8"/><path d="M10 22h4"/></svg>,
+    "Reflect: What Worked Well?": () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+    "Complete Your Session": () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>,
+};
+
+// --- API Call Helper (with exponential backoff) ---
+const callGeminiAPI = async (prompt, retries = 3, delay = 1000) => {
+    // This is a placeholder for the actual API key which will be injected by the environment.
+    const apiKey = ""; 
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+            const result = await response.json();
+            if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                // Handle cases where the model returns a response without text, e.g., due to safety filters.
+                return "The AI model returned an empty response. This might be due to the prompt's content. Please try refining your prompt.";
+            }
+        } catch (error) {
+            if (i === retries - 1) {
+                console.error("Error calling Gemini API after multiple retries:", error);
+                return "There was an error contacting the AI model. Please check the console for details and try again later.";
+            }
+            // Exponential backoff: wait longer before the next retry.
+            await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+        }
+    }
+};
+
+// --- Accessibility Controls ---
+const FloatingControls = ({ theme, setTheme, fontSize, setFontSize }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const fontSizes = ['text-sm', 'text-base', 'text-lg'];
+    
+    return (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 print:hidden">
+            <div className={`flex items-center gap-2 p-2 rounded-full bg-slate-800/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-lg transition-all duration-300 ${isOpen ? 'w-48' : 'w-12'}`}>
+                <button onClick={() => setIsOpen(!isOpen)} className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 text-white transition-colors flex-shrink-0" aria-label="Toggle accessibility controls">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+
+                <div className={`flex items-center gap-2 overflow-hidden transition-all duration-300 ${isOpen ? 'w-full opacity-100' : 'w-0 opacity-0'}`}>
+                    <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 text-white transition-colors" aria-label="Toggle theme">
+                        {theme === 'light' ? 
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg> :
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                        }
+                    </button>
+                    <div className="flex items-center gap-2 text-white flex-grow">
+                        <span className="text-xs font-bold">A</span>
+                        <input 
+                            type="range" 
+                            min="0" 
+                            max="2" 
+                            step="1" 
+                            value={fontSizes.indexOf(fontSize)} 
+                            onChange={(e) => setFontSize(fontSizes[parseInt(e.target.value)])}
+                            className="w-full font-slider"
+                            aria-label="Adjust font size"
+                        />
+                        <span className="text-xl font-bold">A</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+// --- Main Components ---
+const Header = () => (
+    <header className="bg-slate-900 text-white p-6 shadow-lg print:hidden relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-indigo-900/50"></div>
+        <div className="absolute -bottom-1/2 -left-1/4 w-full h-full bg-gradient-radial from-purple-500/10 to-transparent rounded-full"></div>
+        <div className="absolute -top-1/2 -right-1/4 w-3/4 h-3/4 bg-gradient-radial from-teal-500/10 to-transparent rounded-full"></div>
+        <div className="container mx-auto text-center relative z-10">
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight font-poppins text-shadow">Go Beyond with AI</h1>
+            <p className="mt-2 text-lg text-slate-300">Module 1: Prompting with Generative AI</p>
+        </div>
+    </header>
+);
+
+const Section = ({ title, children, className }) => {
+    const Icon = SectionIcons[title];
+    return (
+        <section className={`mb-12 bg-white dark:bg-slate-800/50 p-6 sm:p-8 rounded-2xl shadow-lg border border-slate-200/80 dark:border-slate-700/50 print:hidden backdrop-blur-sm ${className}`}>
+            <div className="flex items-center mb-6">
+                {Icon && (
+                     <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-xl w-14 h-14 flex items-center justify-center font-bold text-2xl mr-5 flex-shrink-0 shadow-lg shadow-indigo-500/30">
+                         <Icon />
+                     </div>
+                )}
+                <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100 font-poppins">{title}</h2>
+            </div>
+            <div className="pl-0 md:pl-[76px]">
+                {children}
+            </div>
+        </section>
+    );
+};
+
+// --- Section 1: Quick Review ---
+const ReviewSection = () => {
+    const features = [
+        { feature: 'Clear Instruction', description: 'Start with a strong action verb. Be direct about the task. Example: "Create a three-column table comparing..."' },
+        { feature: 'Specific Context', description: 'Provide necessary background information. Who is the audience? What is the purpose? Example: "...for a presentation to senior marketing executives."' },
+        { feature: 'Output Format', description: 'Define the structure of the desired output. Examples: "in a JSON array", "as a bulleted list", "in a professional email format".' },
+        { feature: 'Tone or Style', description: 'Specify the desired voice or persona. Examples: "Write in a friendly and encouraging tone", "Adopt the persona of a skeptical scientist".' },
+    ];
+    const [activeFeature, setActiveFeature] = useState(null);
+
+    return (
+        <>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">A well-crafted prompt is the key to unlocking an AI's potential. Click on each feature below to explore its description.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {features.map((item, index) => (
+                    <div key={index} 
+                         className={`p-5 rounded-lg cursor-pointer transition-all duration-300 transform hover:-translate-y-1 group ${activeFeature === index ? 'bg-indigo-100 dark:bg-indigo-900/50 ring-2 ring-indigo-500 shadow-lg' : 'bg-slate-100 dark:bg-slate-700/60 hover:bg-slate-200/80 dark:hover:bg-slate-700'}`}
+                         onClick={() => setActiveFeature(activeFeature === index ? null : index)}>
+                        <h3 className="font-semibold text-lg text-indigo-800 dark:text-indigo-300 font-poppins group-hover:text-indigo-600 dark:group-hover:text-indigo-200 transition-colors">{item.feature}</h3>
+                        {activeFeature === index && (
+                            <p className="mt-2 text-slate-700 dark:text-slate-300 animate-fade-in">{item.description}</p>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </>
+    );
+};
+
+// --- Section 2: Prompt Types & Patterns ---
+const matchingGameExamples = [
+    { id: 'ex1', text: '"You are a career coach. Write a CV summary for a mid-level project manager."', matches: 'role' },
+    { id: 'ex2', text: '"List 5 key takeaways in bullet points from this article."', matches: 'format' },
+    { id: 'ex3', text: '"Rewrite this paragraph in a persuasive tone for a marketing email."', matches: 'style' },
+    { id: 'ex4', text: '"Improve this prompt: \'Explain AI\' → \'Explain AI to a 10-year-old with an example.\'"', matches: 'iterative' },
+];
+
+const MatchingGameSection = ({ selections, onSelectionChange }) => {
+    const patterns = [
+        { id: 'role', type: 'Role-based Prompting' },
+        { id: 'format', type: 'Format-specific Prompting' },
+        { id: 'style', type: 'Style/Persona Prompting' },
+        { id: 'iterative', type: 'Iterative Prompting' },
+    ];
+    
+    const [feedback, setFeedback] = useState({});
+    const [showFeedback, setShowFeedback] = useState(false);
+
+    const handleLocalSelectionChange = (exampleId, selectedPatternId) => {
+        onSelectionChange(exampleId, selectedPatternId);
+        if (showFeedback) {
+            setShowFeedback(false);
+            setFeedback({});
+        }
+    };
+
+    const handleCheckAnswers = () => {
+        const newFeedback = {};
+        matchingGameExamples.forEach(example => {
+            newFeedback[example.id] = selections[example.id] === example.matches;
+        });
+        setFeedback(newFeedback);
+        setShowFeedback(true);
+    };
+
+    return (
+        <>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">For each prompt example, select the matching pattern type from the dropdown menu.</p>
+            <div className="space-y-4">
+                {matchingGameExamples.map(example => (
+                    <div key={example.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                        <p className="md:col-span-2 text-slate-800 dark:text-slate-200">{example.text}</p>
+                        <div className="flex items-center gap-2">
+                           <div className="relative w-full">
+                                <select
+                                    value={selections[example.id] || ''}
+                                    onChange={(e) => handleLocalSelectionChange(example.id, e.target.value)}
+                                    className="custom-select w-full p-2.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 appearance-none"
+                                >
+                                    <option value="" disabled>Select a pattern...</option>
+                                    {patterns.map(pattern => (
+                                        <option key={pattern.id} value={pattern.id}>{pattern.type}</option>
+                                    ))}
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700 dark:text-slate-300">
+                                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                                </div>
+                           </div>
+                            <div className="w-6 h-6 flex-shrink-0">
+                                {showFeedback && feedback[example.id] === true && <CheckCircle />}
+                                {showFeedback && feedback[example.id] === false && <XCircle />}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <div className="mt-6 text-center">
+                <button 
+                    onClick={handleCheckAnswers}
+                    className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-md shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-900 transition-all transform hover:scale-105"
+                >
+                    Check Answers
+                </button>
+            </div>
+        </>
+    );
+};
+
+
+// --- Section 3: Refinement Task ---
+const RefinementTask = ({ original, id, value, onChange }) => {
+    const [feedback, setFeedback] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const getFeedback = async () => {
+        if (!value.trim()) {
+            setFeedback("Please write an improved prompt first.");
+            return;
+        }
+        setIsLoading(true);
+        setFeedback('');
+        const metaPrompt = `You are an AI prompt engineering coach. A user is trying to improve a prompt.
+        Original prompt: "${original}"
+        User's improved prompt: "${value}"
+        Provide concise, constructive feedback on their improvement in 2-3 sentences. Focus on whether they added clarity, context, specificity, or a better format. Start with a positive reinforcement.`;
+        
+        const apiFeedback = await callGeminiAPI(metaPrompt);
+        setFeedback(apiFeedback);
+        setIsLoading(false);
+    };
+
+    return (
+        <div className="mb-8 p-6 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-700/80">
+            <p className="text-slate-600 dark:text-slate-300 font-medium">Original Prompt:</p>
+            <p className="mb-4 p-3 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 rounded-md italic">“{original}”</p>
+
+            <label htmlFor={`improved-${id}`} className="block text-slate-600 dark:text-slate-300 font-medium mb-2">→ Your Improved Prompt:</label>
+            <textarea
+                id={`improved-${id}`}
+                value={value}
+                onChange={(e) => onChange(id, e.target.value)}
+                className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 transition"
+                placeholder="Make it better by adding context, clarity, and defining the output format."
+                rows="3"
+            />
+            <button
+                onClick={getFeedback}
+                disabled={isLoading}
+                className="mt-3 inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-md shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-900 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed transition-all"
+            >
+                {isLoading ? (
+                    <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Getting Feedback...
+                    </>
+                ) : "Get AI Feedback"}
+            </button>
+            {feedback && (
+                <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 rounded-lg border border-emerald-200 dark:border-emerald-700 animate-fade-in">
+                    <p className="font-semibold mb-1">AI Coach Feedback:</p>
+                    <p>{feedback}</p>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const RefinementSection = ({ tasks, onTaskChange }) => {
+    const prompts = [
+        { id: 'biz', original: "Give me ideas for a business." },
+        { id: 'email', original: "Write an email." },
+        { id: 'genai', original: "Explain generative AI." },
+    ];
+
+    return (
+        <>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">Improve the following vague prompts. Add details to enhance clarity, define a tone, or specify the desired format. Use the "Get AI Feedback" button to see how you did.</p>
+            {prompts.map(p => <RefinementTask key={p.id} {...p} value={tasks[p.id]} onChange={onTaskChange} />)}
+        </>
+    );
+};
+
+// --- Section 4: Use Case Practice ---
+const UseCaseSection = ({ data, onDataChange }) => {
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleTestPrompt = async () => {
+        if (!data.draft.trim()) {
+            onDataChange('output', "Please write a draft prompt to test.");
+            return;
+        }
+        setIsLoading(true);
+        onDataChange('output', '');
+        const apiOutput = await callGeminiAPI(data.draft);
+        onDataChange('output', apiOutput);
+        setIsLoading(false);
+    };
+
+    return (
+        <>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">Now, create and test a prompt related to your own work or interests. Follow the steps to draft, test, and refine your prompt.</p>
+            <div className="space-y-6">
+                <div>
+                    <label htmlFor="prompt-goal" className="block text-lg font-semibold text-slate-700 dark:text-slate-200 mb-2 font-poppins">1. Prompt Goal</label>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">What is the primary objective of your prompt? What do you want the AI to generate?</p>
+                    <input id="prompt-goal" type="text" value={data.goal} onChange={e => onDataChange('goal', e.target.value)} className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Create a lesson plan for Business English" />
+                </div>
+                <div>
+                    <label htmlFor="prompt-draft" className="block text-lg font-semibold text-slate-700 dark:text-slate-200 mb-2 font-poppins">2. Prompt Draft</label>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Write your initial prompt here. Don't worry about making it perfect yet.</p>
+                    <textarea id="prompt-draft" value={data.draft} onChange={e => onDataChange('draft', e.target.value)} className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500" rows="4" placeholder="e.g., Create a 60-minute lesson plan..."></textarea>
+                    <button onClick={handleTestPrompt} disabled={isLoading} className="mt-3 inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-md shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:focus:ring-offset-slate-900 disabled:from-slate-400 disabled:to-slate-500">
+                        {isLoading ? 'Testing...' : 'Test Prompt'}
+                    </button>
+                </div>
+                <div>
+                    <label className="block text-lg font-semibold text-slate-700 dark:text-slate-200 mb-2 font-poppins">3. Test Output</label>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Review the generated output. Is it what you expected? What's good? What's missing?</p>
+                    <div className="w-full p-4 min-h-[150px] bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/80 rounded-md whitespace-pre-wrap font-mono text-sm text-slate-800 dark:text-slate-200">
+                        {isLoading ? <div className="text-slate-500 dark:text-slate-400">Generating response...</div> : data.output || "AI output will appear here..."}
+                    </div>
+                </div>
+                <div>
+                    <label htmlFor="prompt-revised" className="block text-lg font-semibold text-slate-700 dark:text-slate-200 mb-2 font-poppins">4. Revised Prompt</label>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">How can you make it better? Refine your prompt based on the output and your review.</p>
+                    <textarea id="prompt-revised" value={data.revised} onChange={e => onDataChange('revised', e.target.value)} className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500" rows="4" placeholder="e.g., Act as an expert curriculum designer. Create a 60-minute lesson plan..."></textarea>
+                </div>
+            </div>
+        </>
+    );
+};
+
+// --- Section 5: Optional Challenge ---
+const ChallengeSection = ({ data, onDataChange }) => {
+    const challenges = [
+        { id: 'social', title: 'Formal to Social Media', placeholder: 'Paste a formal summary here, then write a prompt to convert it for LinkedIn.' },
+        { id: 'brief', title: 'Tasks to Project Brief', placeholder: 'List your tasks here, then write a prompt to structure them into a brief.' },
+        { id: 'analogy', title: 'Concept via Analogy', placeholder: 'Enter a complex concept (e.g., "blockchain"), then prompt the AI to explain it with an analogy for a specific audience.' },
+    ];
+    const [selectedChallenge, setSelectedChallenge] = useState(challenges[0]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleRunChallenge = async () => {
+        if (!data.inputText.trim() || !data.promptText.trim()) {
+            onDataChange('output', "Please provide the input text and your prompt for the challenge.");
+            return;
+        }
+        setIsLoading(true);
+        onDataChange('output', '');
+        const fullPrompt = `Here is the context/input text:\n---\n${data.inputText}\n---\n\nNow, follow this instruction: ${data.promptText}`;
+        const apiOutput = await callGeminiAPI(fullPrompt);
+        onDataChange('output', apiOutput);
+        setIsLoading(false);
+    };
+
+    return (
+        <>
+            <p className="text-slate-600 dark:text-slate-300 mb-4">Choose one of the challenges below to test your prompt versatility and creativity.</p>
+            <div className="flex flex-wrap gap-2 mb-6">
+                {challenges.map(c => (
+                    <button key={c.id} onClick={() => setSelectedChallenge(c)} className={`px-4 py-2 text-sm font-semibold rounded-full transition ${selectedChallenge.id === c.id ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600'}`}>
+                        {c.title}
+                    </button>
+                ))}
+            </div>
+            <div className="p-6 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl border border-indigo-200 dark:border-indigo-800/50 space-y-4">
+                <h3 className="text-xl font-bold text-indigo-800 dark:text-indigo-200 font-poppins">{selectedChallenge.title}</h3>
+                <div>
+                    <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Input Text</label>
+                    <textarea value={data.inputText} onChange={e => onDataChange('inputText', e.target.value)} className="w-full p-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md" rows="5" placeholder={selectedChallenge.placeholder}></textarea>
+                </div>
+                <div>
+                    <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Your Prompt Here</label>
+                    <textarea value={data.promptText} onChange={e => onDataChange('promptText', e.target.value)} className="w-full p-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md" rows="3" placeholder="e.g., 'Rewrite the text above as a 3-part Twitter thread.'"></textarea>
+                </div>
+                <button onClick={handleRunChallenge} disabled={isLoading} className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-md shadow-md hover:shadow-lg disabled:from-slate-400 disabled:to-slate-500">
+                    <SparklesIcon/> <span className="ml-2">{isLoading ? 'Generating...' : 'Run Challenge'}</span>
+                </button>
+                {data.output && (
+                    <div className="mt-4 p-4 bg-white dark:bg-slate-800/50 rounded-lg border dark:border-slate-700">
+                        <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">Challenge Output:</h4>
+                        <div className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">{data.output}</div>
+                    </div>
+                )}
+            </div>
+        </>
+    );
+};
+
+// --- Section 6: Reflection ---
+const ReflectionSection = ({ data, onDataChange }) => {
+    return (
+        <>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">Reflect on your learning. Briefly discuss or note down what helped improve the output most in your experiments.</p>
+            <div className="space-y-6">
+                <div>
+                    <label htmlFor="reflection-1" className="block text-lg font-semibold text-slate-700 dark:text-slate-200 mb-2 font-poppins">What part of the prompt made the biggest difference?</label>
+                    <textarea id="reflection-1" value={data.difference} onChange={e => onDataChange('difference', e.target.value)} className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500" rows="4" placeholder="e.g., 'Adding a specific audience like '10-year-old' completely changed the tone and complexity.'"></textarea>
+                </div>
+                <div>
+                    <label htmlFor="reflection-2" className="block text-lg font-semibold text-slate-700 dark:text-slate-200 mb-2 font-poppins">How will you apply this in your day-to-day work?</label>
+                    <textarea id="reflection-2" value={data.apply} onChange={e => onDataChange('apply', e.target.value)} className="w-full p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500" rows="4" placeholder="e.g., 'I will use role-based prompting to generate materials for my Business English classes.'"></textarea>
+                </div>
+            </div>
+        </>
+    );
+};
+
+// --- Portfolio Print Logic ---
+const handlePrintPortfolio = (portfolioData) => {
+    const { userName, refinementTasks, useCaseData, challengeData, reflectionData } = portfolioData;
+    const formatText = (text) => text ? text.replace(/\n/g, '<br>') : '<em>Not provided</em>';
+
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Prompt Engineering Portfolio for ${userName || 'Learner'}</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+            <style>
+                body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .font-poppins { font-family: 'Poppins', sans-serif; }
+                .section { border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; page-break-inside: avoid; }
+                .prompt { background-color: #f1f5f9; border-left: 4px solid #6366f1; padding: 1rem; margin: 1rem 0; border-radius: 4px; }
+                .response { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; margin-top: 1rem; border-radius: 4px; white-space: pre-wrap; }
+            </style>
+        </head>
+        <body class="p-8 bg-white">
+            <h1 class="text-4xl font-bold text-center mb-2 font-poppins text-slate-800">Prompt Engineering Portfolio</h1>
+            <h2 class="text-2xl text-center mb-8 font-poppins text-slate-600">Portfolio for: ${userName || 'Not Provided'}</h2>
+
+            <div class="section">
+                <h3 class="text-2xl font-bold font-poppins text-slate-700 mb-4">Refinement Task</h3>
+                <div class="prompt"><strong>Original:</strong> "Give me ideas for a business."</div>
+                <div class="response"><strong>Your Improved Prompt:</strong><br>${formatText(refinementTasks.biz)}</div>
+                <hr class="my-4">
+                <div class="prompt"><strong>Original:</strong> "Write an email."</div>
+                <div class="response"><strong>Your Improved Prompt:</strong><br>${formatText(refinementTasks.email)}</div>
+                <hr class="my-4">
+                <div class="prompt"><strong>Original:</strong> "Explain generative AI."</div>
+                <div class="response"><strong>Your Improved Prompt:</strong><br>${formatText(refinementTasks.genai)}</div>
+            </div>
+
+            <div class="section">
+                <h3 class="text-2xl font-bold font-poppins text-slate-700 mb-4">Use Case Practice</h3>
+                <p><strong>Your Goal:</strong> ${formatText(useCaseData.goal)}</p>
+                <div class="prompt"><strong>Your Draft Prompt:</strong><br>${formatText(useCaseData.draft)}</div>
+                <div class="response"><strong>AI Output:</strong><br>${formatText(useCaseData.output)}</div>
+                <div class="prompt"><strong>Your Revised Prompt:</strong><br>${formatText(useCaseData.revised)}</div>
+            </div>
+            
+            <div class="section">
+                <h3 class="text-2xl font-bold font-poppins text-slate-700 mb-4">Optional Prompt Challenge</h3>
+                <p><strong>Input Text:</strong> ${formatText(challengeData.inputText)}</p>
+                <div class="prompt"><strong>Your Prompt:</strong><br>${formatText(challengeData.promptText)}</div>
+                <div class="response"><strong>AI Output:</strong><br>${formatText(challengeData.output)}</div>
+            </div>
+
+            <div class="section">
+                <h3 class="text-2xl font-bold font-poppins text-slate-700 mb-4">Reflection</h3>
+                <p><strong>What part of the prompt made the biggest difference?</strong></p>
+                <div class="response">${formatText(reflectionData.difference)}</div>
+                <p class="mt-4"><strong>How will you apply this in your day-to-day work?</strong></p>
+                <div class="response">${formatText(reflectionData.apply)}</div>
+            </div>
+        </body>
+        </html>
+    `;
+    const printWindow = window.open('', '', 'height=800,width=1000');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 500);
+};
+
+// --- Certificate Component ---
+const Certificate = ({ portfolioData, onBack }) => {
+    const { userName } = portfolioData;
+    const certificateRef = useRef(null);
+
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const skillsSummary = "This certifies that the recipient has demonstrated the ability to identify the features of an effective prompt (clarity, context, format, and style); differentiate between prompt patterns, including role-based and iterative prompting; refine and improve prompts for greater clarity, specificity, and completeness; and apply prompt engineering techniques to generate desired outputs for specific use cases.";
+
+    const handlePrint = () => {
+        const certificateElement = certificateRef.current;
+        if (certificateElement) {
+            const printWindow = window.open('', '', 'height=800,width=1000');
+            printWindow.document.write('<html><head><title>Certificate of Completion</title>');
+            printWindow.document.write('<script src="https://cdn.tailwindcss.com"></script>');
+            printWindow.document.write('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">');
+            printWindow.document.write(`<style>body { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: 'Inter', sans-serif; } .font-poppins { font-family: 'Poppins', sans-serif; } .certificate-bg { background-image: radial-gradient(#e0e7ff 1px, transparent 1px); background-size: 16px 16px; }</style>`);
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(certificateElement.outerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        }
+    };
+
+    return (
+        <div className="bg-slate-100 dark:bg-slate-900 min-h-screen p-4 sm:p-8 flex flex-col items-center justify-center font-serif">
+            <div ref={certificateRef} className="w-full max-w-4xl bg-white shadow-2xl rounded-lg p-8 md:p-12 text-center certificate-container relative overflow-hidden border-8 border-indigo-200 certificate-bg">
+                <div className="absolute -top-20 -left-20 w-60 h-60 bg-indigo-100 rounded-full opacity-50"></div>
+                <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-teal-100 rounded-full opacity-50"></div>
+                <div className="relative z-10">
+                    <h1 className="text-4xl md:text-5xl font-bold text-slate-800 tracking-wider mb-6 font-poppins">Certificate of Completion</h1>
+                    <p className="text-lg text-slate-600 mb-8">This certificate is proudly presented to</p>
+                    <h2 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-8 font-poppins">{userName || 'Dedicated Learner'}</h2>
+                    <p className="text-lg text-slate-600">for the successful completion of the</p>
+                    <p className="text-2xl font-semibold text-slate-700 mb-4 font-poppins">"Prompting with Generative AI"</p>
+                    <p className="text-lg text-slate-600 mb-10">on {formattedDate}</p>
+                    <div className="bg-slate-50/80 backdrop-blur-sm p-6 rounded-lg border border-slate-200 text-left mb-12">
+                        <h3 className="text-xl font-bold text-slate-700 mb-4 text-center font-poppins">Summary of Skills Demonstrated</h3>
+                        <p className="text-slate-600 text-center">
+                           {skillsSummary}
+                        </p>
+                    </div>
+                    <div className="mt-auto">
+                        <p className="text-[20px] font-medium text-slate-800 mb-1" style={{fontFamily: "'Dancing Script', cursive"}}>Fajarudin Akbar</p>
+                        <p className="text-lg text-slate-600">Instructor</p>
+                    </div>
+                </div>
+            </div>
+            <div className="mt-8 flex flex-wrap gap-4 justify-center print:hidden">
+                <button onClick={onBack} className="px-6 py-2 bg-slate-600 text-white font-semibold rounded-md shadow-md hover:bg-slate-700 transition-colors">Back to App</button>
+                <button onClick={handlePrint} className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-md shadow-md hover:shadow-lg transition-all transform hover:scale-105">Print Certificate</button>
+            </div>
+        </div>
+    );
+};
+
+const ChecklistModal = ({ isOpen, onClose, checklistItems }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-md">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 font-poppins">Completion Status</h3>
+                    <button onClick={onClose} className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                <ul className="space-y-3">
+                    {checklistItems.map((item, index) => (
+                        <li key={index} className="flex items-center p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                            <div className="w-6 h-6 mr-4">
+                                {item.completed ? <CheckCircle /> : <XCircle />}
+                            </div>
+                            <span className={`flex-1 ${item.completed ? 'text-slate-700 dark:text-slate-300' : 'text-slate-500 dark:text-slate-400'}`}>{item.label}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </div>
+    );
+};
+
+
+// --- App ---
+export default function App() {
+    const [theme, setTheme] = useState('light');
+    const [fontSize, setFontSize] = useState('text-lg');
+
+    // Effect to load saved theme and font size from localStorage on initial render
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        const savedFontSize = localStorage.getItem('fontSize') || 'text-lg';
+        setTheme(savedTheme);
+        setFontSize(savedFontSize);
+    }, []);
+
+    // Effect to apply theme changes to the document and save to localStorage
+    useEffect(() => {
+        localStorage.setItem('theme', theme);
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }, [theme]);
+
+    // Effect to save font size changes to localStorage
+    useEffect(() => {
+        localStorage.setItem('fontSize', fontSize);
+    }, [fontSize]);
+    
+    const [showCertificate, setShowCertificate] = useState(false);
+    const [showChecklist, setShowChecklist] = useState(false);
+    
+    // State for all user-generated content
+    const [userName, setUserName] = useState('');
+    const [matchingGameSelections, setMatchingGameSelections] = useState({});
+    const [refinementTasks, setRefinementTasks] = useState({ biz: '', email: '', genai: '' });
+    const [useCaseData, setUseCaseData] = useState({ goal: '', draft: '', output: '', revised: '' });
+    const [challengeData, setChallengeData] = useState({ inputText: '', promptText: '', output: '' });
+    const [reflectionData, setReflectionData] = useState({ difference: '', apply: '' });
+    const [completion, setCompletion] = useState(0);
+    const [checklist, setChecklist] = useState([]);
+
+
+    // Handlers to update state
+    const handleMatchingGameChange = (id, value) => setMatchingGameSelections(prev => ({ ...prev, [id]: value }));
+    const handleRefinementChange = (id, value) => setRefinementTasks(prev => ({ ...prev, [id]: value }));
+    const handleUseCaseChange = (field, value) => setUseCaseData(prev => ({ ...prev, [field]: value }));
+    const handleChallengeChange = (field, value) => setChallengeData(prev => ({ ...prev, [field]: value }));
+    const handleReflectionChange = (field, value) => setReflectionData(prev => ({...prev, [field]: value }));
+
+    // Consolidate all portfolio data into one object for easy passing
+    const portfolioData = { userName, refinementTasks, useCaseData, challengeData, reflectionData };
+    
+    // Effect to calculate completion progress
+    useEffect(() => {
+        const checklistItems = [
+            { label: 'Enter Your Name', completed: userName.trim() !== '' },
+            { label: 'Complete Matching Game', completed: Object.keys(matchingGameSelections).length === 4 },
+            { label: 'Refine Business Prompt', completed: refinementTasks.biz.trim() !== '' },
+            { label: 'Refine Email Prompt', completed: refinementTasks.email.trim() !== '' },
+            { label: 'Refine AI Explanation Prompt', completed: refinementTasks.genai.trim() !== '' },
+            { label: 'Define Use Case Goal', completed: useCaseData.goal.trim() !== '' },
+            { label: 'Draft Use Case Prompt', completed: useCaseData.draft.trim() !== '' },
+            { label: 'Revise Use Case Prompt', completed: useCaseData.revised.trim() !== '' },
+            { label: 'Reflect on Key Differences', completed: reflectionData.difference.trim() !== '' },
+            { label: 'Reflect on Application', completed: reflectionData.apply.trim() !== '' },
+        ];
+        
+        const completedCount = checklistItems.filter(item => item.completed).length;
+        const totalCount = checklistItems.length;
+        const percentage = (completedCount / totalCount) * 100;
+        
+        setCompletion(percentage);
+        setChecklist(checklistItems);
+
+    }, [userName, matchingGameSelections, refinementTasks, useCaseData, reflectionData]);
+
+
+    if (showCertificate) {
+        return <Certificate portfolioData={portfolioData} onBack={() => setShowCertificate(false)} />;
+    }
+
+    return (
+        <div className={`${theme} ${fontSize}`}>
+            <div className={`bg-slate-100 dark:bg-slate-900 min-h-screen font-inter transition-colors duration-300`}>
+                <Header />
+                <FloatingControls theme={theme} setTheme={setTheme} fontSize={fontSize} setFontSize={setFontSize} />
+                <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                    <Section title="Start Here">
+                        <p className="text-slate-600 dark:text-slate-300 mb-4">Welcome! Please enter your name to personalize your portfolio and certificate.</p>
+                         <input 
+                            type="text"
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            placeholder="e.g., Alex Doe"
+                            className="w-full md:w-1/2 p-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500"
+                         />
+                    </Section>
+
+                    <Section title="Quick Review: What Makes a Good Prompt?">
+                        <ReviewSection />
+                    </Section>
+                    
+                    <Section title="Prompt Types & Patterns">
+                        <MatchingGameSection selections={matchingGameSelections} onSelectionChange={handleMatchingGameChange} />
+                    </Section>
+
+                    <Section title="Refinement Task: Make It Better">
+                        <RefinementSection tasks={refinementTasks} onTaskChange={handleRefinementChange} />
+                    </Section>
+
+                    <Section title="Use Case Practice: Personal or Professional Need">
+                        <UseCaseSection data={useCaseData} onDataChange={handleUseCaseChange} />
+                    </Section>
+
+                    <Section title="Optional Prompt Challenge">
+                        <ChallengeSection data={challengeData} onDataChange={handleChallengeChange} />
+                    </Section>
+
+                    <Section title="Reflect: What Worked Well?">
+                        <ReflectionSection data={reflectionData} onDataChange={handleReflectionChange} />
+                    </Section>
+                    
+                    <Section title="Complete Your Session">
+                        <div className="w-full max-w-md mx-auto mb-8 text-center">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Module Completion</span>
+                                <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{Math.round(completion)}%</span>
+                            </div>
+                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                                <div
+                                    className="bg-gradient-to-r from-teal-400 to-indigo-500 h-2.5 rounded-full transition-all duration-500 ease-out"
+                                    style={{ width: `${completion}%` }}
+                                ></div>
+                            </div>
+                        </div>
+
+                        {completion === 100 && (
+                             <p className="text-slate-600 dark:text-slate-300 mb-6 text-center animate-fade-in">You've completed the module! You can now generate a portfolio of your work or claim your certificate.</p>
+                        )}
+                        <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
+                            <button
+                                onClick={() => handlePrintPortfolio(portfolioData)}
+                                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-lg rounded-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:focus:ring-offset-slate-900 transform hover:scale-105 transition-all duration-300"
+                            >
+                                Print Portfolio
+                            </button>
+                             <button
+                                onClick={() => setShowChecklist(true)}
+                                className="px-6 py-3 bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200 font-bold text-lg rounded-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 dark:focus:ring-offset-slate-900 transform hover:scale-105 transition-all duration-300"
+                            >
+                                View Progress
+                            </button>
+                            <div className="relative group">
+                                <button
+                                    onClick={() => setShowCertificate(true)}
+                                    disabled={completion < 100}
+                                    className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg rounded-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-900 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-lg"
+                                >
+                                    Get Certificate
+                                </button>
+                                {completion < 100 && (
+                                    <div className="absolute bottom-full mb-2 w-max max-w-xs left-1/2 -translate-x-1/2 px-3 py-2 bg-slate-800 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                        Please complete all required activities to get your certificate.
+                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-slate-800"></div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </Section>
+
+                </main>
+                <footer className="bg-slate-900/80 backdrop-blur-sm text-white text-center p-8 mt-12 print:hidden">
+                    <p className="font-semibold text-lg font-poppins text-slate-300">
+                       Designed by <a href="https://linkedin.com/in/fajarudinakbar" target="_blank" rel="noopener noreferrer" className="text-indigo-300 hover:text-indigo-100 transition-colors hover:underline">
+                            Fajarudin Akbar
+                        </a>
+                    </p>
+                </footer>
+                <ChecklistModal isOpen={showChecklist} onClose={() => setShowChecklist(false)} checklistItems={checklist} />
+                <style>{`
+                    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+                    
+                    body {
+                        font-family: 'Inter', sans-serif;
+                    }
+
+                    .font-poppins {
+                        font-family: 'Poppins', sans-serif;
+                    }
+
+                    .text-shadow {
+                        text-shadow: 0px 2px 4px rgba(0,0,0,0.2);
+                    }
+
+                    .animate-fade-in {
+                        animation: fadeIn 0.5s ease-in-out;
+                    }
+                    
+                    @keyframes fadeIn {
+                        from { opacity: 0; transform: translateY(-10px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    
+                    /* Custom Slider Styles */
+                    .font-slider {
+                        -webkit-appearance: none;
+                        appearance: none;
+                        width: 80px;
+                        height: 4px;
+                        background: #475569; /* slate-600 */
+                        border-radius: 5px;
+                        outline: none;
+                        transition: opacity .2s;
+                    }
+
+                    .font-slider::-webkit-slider-thumb {
+                        -webkit-appearance: none;
+                        appearance: none;
+                        width: 18px;
+                        height: 18px;
+                        background: #818cf8; /* indigo-400 */
+                        cursor: pointer;
+                        border-radius: 50%;
+                        border: 2px solid #1e293b; /* slate-800 */
+                    }
+
+                    .font-slider::-moz-range-thumb {
+                        width: 18px;
+                        height: 18px;
+                        background: #818cf8; /* indigo-400 */
+                        cursor: pointer;
+                        border-radius: 50%;
+                        border: 2px solid #1e293b; /* slate-800 */
+                    }
+                    
+                    .certificate-bg { 
+                        background-image: radial-gradient(#eef2ff 1px, transparent 1px); 
+                        background-size: 20px 20px; 
+                    }
+                `}</style>
+            </div>
+        </div>
+    );
+}
