@@ -21,11 +21,11 @@
         details > summary::-webkit-details-marker {
             display: none;
         }
-        /* Custom checkbox styling */
+        /* Custom checkbox styling for high contrast */
         .custom-checkbox {
             appearance: none;
             background-color: #fff;
-            border: 2px solid #cbd5e1; /* slate-300 */
+            border: 2px solid #94a3b8; /* slate-400 */
             border-radius: 0.375rem;
             width: 1.25rem;
             height: 1.25rem;
@@ -58,26 +58,36 @@
         }
     </style>
 </head>
-<body class="text-slate-900">
+<body class="text-slate-800">
 
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <!-- Header Section -->
-        <header class="text-center mb-16">
-            <h1 class="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-indigo-600 to-teal-500 bg-clip-text text-transparent pb-2">Go Beyond with AI</h1>
-            <h2 class="text-2xl md:text-3xl font-bold text-slate-900 mt-2">Module 4: Delegating with Generative AI</h2>
-            <p class="text-lg md:text-xl text-slate-600 mt-3 max-w-3xl mx-auto">Building Business Chatbots with Poe & Meta AI Studio</p>
-            <div class="mt-8 bg-white border border-indigo-200 text-indigo-900 p-5 rounded-xl text-left shadow-sm max-w-4xl mx-auto" role="alert">
-                <p class="font-bold text-lg flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                    Learning Outcome
-                </p>
-                <p class="mt-2 text-slate-700 pl-9">By the end of this module, you will have two functional business chatbots—one in Poe for structured text-based tasks and one in Meta AI Studio for interactive customer engagement on social media platforms.</p>
+        <header class="mb-16 bg-white p-8 rounded-2xl shadow-lg shadow-slate-200/70 border border-slate-200/80">
+            <h2 class="text-sm font-bold text-indigo-600 uppercase tracking-wider">Go Beyond with AI</h2>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mt-2">Module 4: Delegating with Generative AI</h1>
+            <p class="text-lg text-slate-600 mt-4 max-w-3xl">Learn how to create and run powerful business chatbots directly in AI tools — no external software needed.</p>
+            
+            <div class="mt-6 pt-6 border-t border-slate-200 space-y-6">
+                <div>
+                    <h3 class="text-sm font-medium text-slate-500 mb-3">Tools Covered</h3>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="https://poe.com" target="_blank" class="inline-block px-3 py-1 text-sm font-medium text-indigo-700 bg-indigo-100 rounded-full hover:bg-indigo-200 transition-colors">Poe</a>
+                        <a href="https://ai.meta.com" target="_blank" class="inline-block px-3 py-1 text-sm font-medium text-indigo-700 bg-indigo-100 rounded-full hover:bg-indigo-200 transition-colors">Meta AI Studio</a>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                     <h3 class="text-sm font-medium text-slate-500">Accessibility</h3>
+                     <div class="flex items-center gap-2">
+                        <span class="text-sm text-slate-600">Font Size</span>
+                        <button id="decrease-font" class="w-8 h-8 flex items-center justify-center rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-lg transition-colors" aria-label="Decrease font size">-</button>
+                        <span id="font-size-display" class="w-10 text-center text-sm font-semibold text-slate-800">16px</span>
+                        <button id="increase-font" class="w-8 h-8 flex items-center justify-center rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-lg transition-colors" aria-label="Increase font size">+</button>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <main class="space-y-4">
+        <main class="space-y-5">
             <!-- Section 1 -->
             <details class="bg-white p-4 sm:p-6 rounded-xl shadow-lg shadow-slate-200/70 border border-slate-200/80 group transition-all duration-300 ease-in-out" open>
                 <summary class="section-summary flex justify-between items-center cursor-pointer font-semibold text-xl text-slate-900 rounded-lg p-3 transition-colors">
@@ -91,16 +101,16 @@
                         <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                 </summary>
-                <div class="mt-4 text-slate-700 space-y-4 pt-4 border-t border-slate-200 pl-16 pr-3">
+                <div class="mt-4 text-slate-800 space-y-4 pt-4 border-t border-slate-200 pl-16 pr-3">
                     <p>Modern businesses face an endless stream of customer inquiries, routine tasks, and repetitive questions. AI chatbots can:</p>
-                    <ul class="list-disc list-inside space-y-2 pl-4 text-slate-600">
+                    <ul class="list-disc list-inside space-y-2 pl-4 text-slate-700">
                         <li>Save time by automating FAQs</li>
                         <li>Improve response speed and consistency</li>
                         <li>Handle multiple conversations simultaneously</li>
                         <li>Provide 24/7 availability</li>
                     </ul>
-                    <h3 class="font-semibold text-lg text-slate-800">Example Uses in Business:</h3>
-                    <ul class="list-disc list-inside space-y-2 pl-4 text-slate-600">
+                    <h3 class="font-semibold text-lg text-slate-900">Example Uses in Business:</h3>
+                    <ul class="list-disc list-inside space-y-2 pl-4 text-slate-700">
                         <li><strong>Consulting Firm:</strong> Automate initial client intake questions</li>
                         <li><strong>E-commerce Store:</strong> Provide instant product information</li>
                         <li><strong>Corporate HR:</strong> Answer employee policy queries</li>
@@ -122,20 +132,20 @@
                         <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                 </summary>
-                <div class="mt-4 text-slate-700 space-y-6 pt-4 border-t border-slate-200 pl-16 pr-3">
+                <div class="mt-4 text-slate-800 space-y-6 pt-4 border-t border-slate-200 pl-16 pr-3">
                     <div>
-                        <h3 class="font-bold text-lg text-slate-800">2.1 What is Poe?</h3>
+                        <h3 class="font-bold text-lg text-slate-900">2.1 What is Poe?</h3>
                         <p class="mt-2">Poe (<a href="https://poe.com" target="_blank" class="text-indigo-600 hover:underline font-semibold">poe.com</a>) is a platform where you can create a custom AI assistant by setting its instructions, personality, and example prompts.</p>
-                        <p class="mt-2 font-semibold">Best for:</p>
-                        <ul class="list-disc list-inside mt-2 space-y-1 text-slate-600">
+                        <p class="mt-2 font-semibold text-slate-900">Best for:</p>
+                        <ul class="list-disc list-inside mt-2 space-y-1 text-slate-700">
                             <li>Client Q&A</li>
                             <li>Proposal or report generation</li>
                             <li>Internal knowledge base</li>
                         </ul>
                     </div>
                     <div>
-                        <h3 class="font-bold text-lg text-slate-800">2.2 Step-by-Step Guide</h3>
-                        <ol class="list-decimal list-inside mt-2 space-y-3 pl-4 text-slate-600">
+                        <h3 class="font-bold text-lg text-slate-900">2.2 Step-by-Step Guide</h3>
+                        <ol class="list-decimal list-inside mt-2 space-y-3 pl-4 text-slate-700">
                             <li><strong>Sign Up & Access Bot Builder:</strong> Go to <a href="https://poe.com" target="_blank" class="text-indigo-600 hover:underline font-semibold">poe.com</a>, sign up, and click "Create a bot."</li>
                             <li><strong>Choose a Base Model:</strong> Select Claude for detailed explanations or GPT-4o for short, clear answers.</li>
                             <li><strong>Write Bot Instructions:</strong> Clearly define the bot's role, audience, tone, and boundaries.</li>
@@ -144,23 +154,23 @@
                             <li><strong>Save & Test:</strong> Test with various queries to check tone, accuracy, and formatting.</li>
                         </ol>
                     </div>
-                    <div class="practice-box bg-slate-50 p-5 rounded-lg border-teal-500">
-                        <h3 class="font-bold text-lg text-slate-800">Poe Self-Guided Practice</h3>
+                    <div class="practice-box bg-teal-50/50 p-5 rounded-lg border-teal-500">
+                        <h3 class="font-bold text-lg text-teal-900">Poe Self-Guided Practice</h3>
                         <div class="mt-3 space-y-3">
-                            <p class="font-semibold text-slate-700">Task: Create a Poe bot for a business of your choice.</p>
-                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Write bot instructions (150–200 words).</label>
-                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Add welcome message (1–2 sentences).</label>
-                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Add 3 suggested prompts.</label>
-                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Test and refine based on feedback.</label>
+                            <p class="font-semibold text-teal-800">Task: Create a Poe bot for a business of your choice.</p>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Write bot instructions (150–200 words).</label>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Add welcome message (1–2 sentences).</label>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Add 3 suggested prompts.</label>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Test and refine based on feedback.</label>
                         </div>
                         <div class="mt-5 space-y-3">
-                             <p class="font-semibold text-slate-700">Self-Check Questions:</p>
-                             <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Does the bot answer in a way that matches your brand tone?</label>
-                             <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Does it know when to escalate to a human?</label>
-                             <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Are its answers consistent when asked similar questions?</label>
+                             <p class="font-semibold text-teal-800">Self-Check Questions:</p>
+                             <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Does the bot answer in a way that matches your brand tone?</label>
+                             <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Does it know when to escalate to a human?</label>
+                             <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Are its answers consistent when asked similar questions?</label>
                         </div>
-                        <div class="mt-5 border-t border-slate-200 pt-4">
-                             <label class="flex items-center font-bold text-teal-700 hover:text-teal-800 gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Mark Poe Chatbot Activity as Completed</label>
+                        <div class="mt-5 border-t border-teal-200 pt-4">
+                             <label class="flex items-center font-bold text-emerald-700 hover:text-emerald-800 gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Mark Poe Chatbot Activity as Completed</label>
                         </div>
                     </div>
                 </div>
@@ -179,20 +189,20 @@
                         <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                 </summary>
-                <div class="mt-4 text-slate-700 space-y-6 pt-4 border-t border-slate-200 pl-16 pr-3">
+                <div class="mt-4 text-slate-800 space-y-6 pt-4 border-t border-slate-200 pl-16 pr-3">
                      <div>
-                        <h3 class="font-bold text-lg text-slate-800">3.1 What is Meta AI Studio?</h3>
+                        <h3 class="font-bold text-lg text-slate-900">3.1 What is Meta AI Studio?</h3>
                         <p class="mt-2">Meta AI Studio lets you create AI characters for Messenger, Instagram, and WhatsApp.</p>
-                        <p class="mt-2 font-semibold">Best for:</p>
-                        <ul class="list-disc list-inside mt-2 space-y-1 text-slate-600">
+                        <p class="mt-2 font-semibold text-slate-900">Best for:</p>
+                        <ul class="list-disc list-inside mt-2 space-y-1 text-slate-700">
                             <li>Marketing interactions</li>
                             <li>Customer service on social channels</li>
                             <li>Lead qualification</li>
                         </ul>
                     </div>
                     <div>
-                        <h3 class="font-bold text-lg text-slate-800">3.2 Step-by-Step Guide</h3>
-                        <ol class="list-decimal list-inside mt-2 space-y-3 pl-4 text-slate-600">
+                        <h3 class="font-bold text-lg text-slate-900">3.2 Step-by-Step Guide</h3>
+                        <ol class="list-decimal list-inside mt-2 space-y-3 pl-4 text-slate-700">
                             <li><strong>Access AI Studio:</strong> Visit <a href="https://ai.meta.com" target="_blank" class="text-indigo-600 hover:underline font-semibold">ai.meta.com</a>, log in, and click "Create AI."</li>
                             <li><strong>Name & Describe:</strong> Give your bot a clear name and description.</li>
                             <li><strong>Set Personality & Behavior:</strong> Define its style, do's, and don'ts.</li>
@@ -201,22 +211,22 @@
                             <li><strong>Publish & Test:</strong> Test for quick responses, clear options, and brand-safe language.</li>
                         </ol>
                     </div>
-                    <div class="practice-box bg-slate-50 p-5 rounded-lg border-sky-500">
-                        <h3 class="font-bold text-lg text-slate-800">Meta AI Studio Self-Guided Practice</h3>
+                    <div class="practice-box bg-sky-50/50 p-5 rounded-lg border-sky-500">
+                        <h3 class="font-bold text-lg text-sky-900">Meta AI Studio Self-Guided Practice</h3>
                         <div class="mt-3 space-y-3">
-                            <p class="font-semibold text-slate-700">Task: Build a social media bot for a business scenario.</p>
-                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Define name, description, and personality.</label>
-                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Add welcome message and 3 starter prompts.</label>
-                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Test with a clear query, a vague request, and an off-topic question.</label>
+                            <p class="font-semibold text-sky-800">Task: Build a social media bot for a business scenario.</p>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Define name, description, and personality.</label>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Add welcome message and 3 starter prompts.</label>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Test with a clear query, a vague request, and an off-topic question.</label>
                         </div>
                         <div class="mt-5 space-y-3">
-                             <p class="font-semibold text-slate-700">Self-Check Questions:</p>
-                             <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Does it engage naturally and encourage conversation?</label>
-                             <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Does it avoid unsafe or off-brand responses?</label>
-                             <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Is it easy for the user to continue chatting?</label>
+                             <p class="font-semibold text-sky-800">Self-Check Questions:</p>
+                             <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Does it engage naturally and encourage conversation?</label>
+                             <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Does it avoid unsafe or off-brand responses?</label>
+                             <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Is it easy for the user to continue chatting?</label>
                         </div>
-                        <div class="mt-5 border-t border-slate-200 pt-4">
-                             <label class="flex items-center font-bold text-teal-700 hover:text-teal-800 gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Mark Meta AI Studio Activity as Completed</label>
+                        <div class="mt-5 border-t border-sky-200 pt-4">
+                             <label class="flex items-center font-bold text-emerald-700 hover:text-emerald-800 gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Mark Meta AI Studio Activity as Completed</label>
                         </div>
                     </div>
                 </div>
@@ -235,21 +245,21 @@
                         <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                 </summary>
-                <div class="mt-4 text-slate-700 space-y-4 pt-4 border-t border-slate-200 pl-16 pr-3">
-                    <p class="font-semibold">Exercise:</p>
-                    <ol class="list-decimal list-inside space-y-2 pl-4 text-slate-600">
+                <div class="mt-4 text-slate-800 space-y-4 pt-4 border-t border-slate-200 pl-16 pr-3">
+                    <p class="font-semibold text-slate-900">Exercise:</p>
+                    <ol class="list-decimal list-inside space-y-2 pl-4 text-slate-700">
                         <li>Pick one business role (e.g., HR Assistant, Sales Agent).</li>
                         <li>Create the same bot in both Poe and Meta AI Studio.</li>
                         <li>Test both using an FAQ, a complex request, and an off-topic question.</li>
                     </ol>
-                    <p class="font-semibold">Record:</p>
+                    <p class="font-semibold text-slate-900">Record:</p>
                     <div class="space-y-3">
                         <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Which gave better answers?</label>
                         <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Which was easier to adjust?</label>
                         <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Which is more suitable for your audience?</label>
                     </div>
                     <div class="mt-4 border-t pt-4">
-                        <label class="flex items-center font-bold text-teal-700 hover:text-teal-800 gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Mark Comparative Reflection as Completed</label>
+                        <label class="flex items-center font-bold text-emerald-700 hover:text-emerald-800 gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Mark Comparative Reflection as Completed</label>
                     </div>
                 </div>
             </details>
@@ -268,8 +278,8 @@
                     </div>
                 </summary>
                 <div class="mt-4 space-y-4 pt-4 border-t border-slate-200 pl-16 pr-3">
-                    <h4 class="font-bold text-lg text-slate-800">Deliverables:</h4>
-                    <ul class="list-disc list-inside space-y-2 pl-4 text-slate-600">
+                    <h4 class="font-bold text-lg text-slate-900">Deliverables:</h4>
+                    <ul class="list-disc list-inside space-y-2 pl-4 text-slate-700">
                         <li>Screenshots of your Poe and Meta AI bot setup</li>
                         <li>A short reflection on the process (200–300 words)</li>
                         <li>Links to your two published chatbots</li>
@@ -285,7 +295,7 @@
                         </div>
                     </div>
                     <div class="mt-4 border-t pt-4">
-                        <label class="flex items-center font-bold text-teal-700 hover:text-teal-800 gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Mark Final Project as Completed</label>
+                        <label class="flex items-center font-bold text-emerald-700 hover:text-emerald-800 gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Mark Final Project as Completed</label>
                     </div>
                 </div>
             </details>
@@ -312,18 +322,6 @@
         </div>
     </div>
 
-    <!-- Font Size Controller -->
-    <div class="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full bg-white/80 p-2 shadow-lg backdrop-blur-sm border border-slate-200">
-        <button id="decrease-font" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-lg transition-colors" aria-label="Decrease font size">-</button>
-        <button id="reset-font" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" aria-label="Reset font size">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z"/>
-                <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466"/>
-            </svg>
-        </button>
-        <button id="increase-font" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-lg transition-colors" aria-label="Increase font size">+</button>
-    </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- Element Selections ---
@@ -336,7 +334,32 @@
             const certificateNameInput = document.getElementById('certificateName');
             const totalCheckboxes = checkboxes.length;
 
-            // --- Functions ---
+            // --- FONT SIZE CONTROLLER ---
+            const increaseFontBtn = document.getElementById('increase-font');
+            const decreaseFontBtn = document.getElementById('decrease-font');
+            const fontSizeDisplay = document.getElementById('font-size-display');
+            const htmlElement = document.documentElement;
+
+            const initialFontSize = 16; // Base font size in pixels for 1rem
+            const minFontSize = 12;
+            const maxFontSize = 22;
+            let currentFontSize = initialFontSize;
+
+            const updateFontSize = (size) => {
+                currentFontSize = Math.max(minFontSize, Math.min(maxFontSize, size));
+                htmlElement.style.fontSize = `${currentFontSize}px`;
+                fontSizeDisplay.textContent = `${currentFontSize}px`;
+            };
+
+            increaseFontBtn.addEventListener('click', () => {
+                updateFontSize(currentFontSize + 1);
+            });
+
+            decreaseFontBtn.addEventListener('click', () => {
+                updateFontSize(currentFontSize - 1);
+            });
+            
+            // --- Other Functions ---
             const updateProgress = () => {
                 const checkedCount = document.querySelectorAll('.progress-checkbox:checked').length;
                 const progressPercentage = totalCheckboxes > 0 ? (checkedCount / totalCheckboxes) * 100 : 0;
@@ -432,34 +455,6 @@ ${chatbotLinks || 'No links provided.'}
                 doc.save(`Certificate_${userName.replace(/ /g, '_')}.pdf`);
             };
 
-            // --- FONT SIZE CONTROLLER ---
-            const increaseFontBtn = document.getElementById('increase-font');
-            const decreaseFontBtn = document.getElementById('decrease-font');
-            const resetFontBtn = document.getElementById('reset-font');
-            const htmlElement = document.documentElement;
-
-            const initialFontSize = 16; // Base font size in pixels for 1rem
-            const minFontSize = 12;
-            const maxFontSize = 22;
-            let currentFontSize = initialFontSize;
-
-            const updateFontSize = (size) => {
-                currentFontSize = Math.max(minFontSize, Math.min(maxFontSize, size));
-                htmlElement.style.fontSize = `${currentFontSize}px`;
-            };
-
-            increaseFontBtn.addEventListener('click', () => {
-                updateFontSize(currentFontSize + 1);
-            });
-
-            decreaseFontBtn.addEventListener('click', () => {
-                updateFontSize(currentFontSize - 1);
-            });
-
-            resetFontBtn.addEventListener('click', () => {
-                updateFontSize(initialFontSize);
-            });
-
             // --- Event Listeners ---
             checkboxes.forEach(checkbox => checkbox.addEventListener('change', updateProgress));
             completeButton.addEventListener('click', enableCertificateGeneration);
@@ -468,6 +463,7 @@ ${chatbotLinks || 'No links provided.'}
 
             // --- Initial State ---
             updateProgress();
+            updateFontSize(initialFontSize); // Set initial font size display
         });
     </script>
 </body>
