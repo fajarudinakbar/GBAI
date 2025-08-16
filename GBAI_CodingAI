@@ -1,457 +1,470 @@
-import React, { useState, useEffect, useRef } from 'react';
-
-// --- Helper Data & Components ---
-
-const moduleData = {
-  title: "Module 3: Coding with Generative AI",
-  tools: [
-    { name: "ChatGPT Canvas", url: "https://chat.openai.com/" },
-    { name: "Gemini Canvas", url: "https://gemini.google.com/" },
-    { name: "Claude Artifact", url: "https://claude.ai/" }
-  ],
-  goal: "Learn how to create and run websites, web apps, and multimedia pages directly in AI tools — no external software needed.",
-  sections: [
-    {
-      id: 1,
-      title: "How Coding with AI Works",
-      icon: "✨",
-      content: [
-        "Choose what you want to build — a simple website, an interactive web app, or a page with multimedia (images, audio, video).",
-        "Write a clear prompt — describe what you want, and include important details like layout, colors, and features.",
-        "Paste your prompt into an AI tool like ChatGPT Canvas, Gemini Canvas, or Claude Artifact.",
-        "Click 'Preview' — the tool will generate the code and show your project live.",
-        "Adjust and improve — add more features or change the design by refining your prompt."
-      ]
-    },
-    {
-      id: 2,
-      title: "Understanding the Building Blocks",
-      icon: "🧱",
-      content: [
-        { term: "HTML (Structure)", definition: "The skeleton of your page. It decides what’s on the page, like text, images, headings, and links." },
-        { term: "CSS (Style)", definition: "The clothing and appearance. It decides how the page looks, including colors, fonts, spacing, and layout." },
-        { term: "JavaScript (Interaction)", definition: "The brain and muscles. It makes your page do things, like making buttons work, playing animations, or saving data from forms." },
-      ],
-      note: "You don’t need to be an expert in these. The AI writes the code for you when you provide a good prompt!"
-    },
-    {
-      id: 3,
-      title: "Prompt Templates & Keywords",
-      icon: "📝",
-      content: [
-        {
-          type: "A. Static Website (Simple Pages)",
-          use: "Portfolios, company pages, product info.",
-          keywords: ["responsive design", "single-page", "header", "navigation", "footer", "hero section", "color scheme", "Google Fonts", "mobile-friendly"],
-          template: 'Create a single-page responsive website with a hero section, about section, services section, and contact form. Use a [color scheme] and [font].'
-        },
-        {
-          type: "B. Web App (Interactive Pages)",
-          use: "Tools, games, calculators, to-do lists.",
-          keywords: ["interactive", "dynamic", "JavaScript functionality", "user input", "form validation", "real-time updates", "clean layout"],
-          template: 'Build a responsive [type of app] with an input field, buttons, and saved data. Use a minimalist design.'
-        },
-        {
-          type: "C. Multimodal Page (Text + Media)",
-          use: "Travel guides, online courses, product showcases.",
-          keywords: ["embed images", "audio", "video", "captions", "interactive gallery", "slideshow", "multilingual support"],
-          template: 'Create an interactive page with [media types], captions, and a responsive layout.'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 4: Delegating with Generative AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #f1f5f9; /* slate-100 */
         }
-      ]
-    },
-    {
-      id: 4,
-      title: "Practice Tasks",
-      icon: "✅",
-      content: [
-        "Use the Static Website template to make a personal portfolio.",
-        "Use the Web App template to create a simple tool (e.g., a to-do list).",
-        "Use the Multimodal template to make a travel guide with images and audio.",
-        "Open Preview and test your project — adjust your prompts until you’re happy with the result."
-      ]
-    },
-    {
-      id: 5,
-      title: "Self-Check Before Moving On",
-      icon: "🤔",
-      isQuiz: true,
-      content: [
-        { question: "Can you explain what HTML, CSS, and JavaScript do in your own words?", id: "q1" },
-        { question: "Can you list three keywords for each type of coding project (Static, Web App, Multimodal)?", id: "q2" },
-        { question: "Have you successfully created at least one project in Preview mode?", id: "q3" }
-      ],
-      conclusion: "If you can answer “yes” to all, you’re ready for the final project!"
-    },
-    {
-      id: 6,
-      title: "Final Project",
-      icon: "🏆",
-      content: [
-        "Pick one type of project: a Static Website, a Web App, or a Multimodal Page.",
-        "Write your own unique prompt using at least 5 keywords from the lists provided earlier.",
-        "Generate your project in an AI Canvas or Artifact tool.",
-        "Preview and refine your project until it's complete and you're proud of it.",
-        "Share your final project preview!"
-      ]
-    }
-  ]
-};
+        /* Hide the default details marker */
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        /* Custom checkbox styling for high contrast */
+        .custom-checkbox {
+            appearance: none;
+            background-color: #fff;
+            border: 2px solid #94a3b8; /* slate-400 */
+            border-radius: 0.375rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            display: inline-block;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            flex-shrink: 0;
+        }
+        .custom-checkbox:checked {
+            background-color: #4f46e5; /* indigo-600 */
+            border-color: #4f46e5; /* indigo-600 */
+        }
+        .custom-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 0.375rem;
+            top: 0.125rem;
+            width: 0.375rem;
+            height: 0.75rem;
+            border: solid white;
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+        .section-summary:hover {
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .practice-box {
+            border-left-width: 4px;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
 
-// --- Icon Component (for certificate buttons) ---
-const Icon = ({ name, className }) => {
-  const icons = {
-    ChevronUp: <path d="m18 15-6-6-6 6"/>,
-    ChevronDown: <path d="m6 9 6 6 6-6"/>,
-    CheckCircle: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></>,
-    X: <path d="M18 6 6 18M6 6l12 12"/>,
-    Download: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />,
-  };
-  return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{icons[name] || <path/>}</svg>;
-};
-
-// --- Component to load external scripts and styles ---
-const ExternalResources = () => {
-  useEffect(() => {
-    // Load Google Font
-    const fontLink = document.createElement('link');
-    fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap';
-    fontLink.rel = 'stylesheet';
-    document.head.appendChild(fontLink);
-
-    // Load html2canvas
-    const html2canvasScript = document.createElement('script');
-    html2canvasScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    html2canvasScript.async = true;
-    document.body.appendChild(html2canvasScript);
-
-    // Load jsPDF
-    const jspdfScript = document.createElement('script');
-    jspdfScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    jspdfScript.async = true;
-    document.body.appendChild(jspdfScript);
-
-    // Add a body style to use the font
-    document.body.style.fontFamily = "'Inter', sans-serif";
-
-    // Cleanup function to remove elements on component unmount
-    return () => {
-      if (fontLink.parentNode) document.head.removeChild(fontLink);
-      if (html2canvasScript.parentNode) document.body.removeChild(html2canvasScript);
-      if (jspdfScript.parentNode) document.body.removeChild(jspdfScript);
-    };
-  }, []); // Empty dependency array ensures this runs only once
-
-  return null; // This component doesn't render anything
-};
-
-
-// --- Main Application Component ---
-export default function App() {
-  const [completedSections, setCompletedSections] = useState({});
-  const [progress, setProgress] = useState(0);
-  const [userName, setUserName] = useState('');
-  const [showCertificate, setShowCertificate] = useState(false);
-  // --- NEW: State for font size ---
-  const [baseFontSize, setBaseFontSize] = useState(16); // Default: 16px
-
-  const totalSections = moduleData.sections.length;
-
-  // --- NEW: Effect to update root font size on the <html> element ---
-  // This allows all `rem` units in Tailwind to scale proportionally.
-  useEffect(() => {
-    document.documentElement.style.fontSize = `${baseFontSize}px`;
-    // Cleanup function to reset the font size when the component unmounts
-    return () => {
-      document.documentElement.style.fontSize = '';
-    };
-  }, [baseFontSize]);
-
-  useEffect(() => {
-    const completedCount = Object.values(completedSections).filter(Boolean).length;
-    setProgress((completedCount / totalSections) * 100);
-  }, [completedSections, totalSections]);
-
-  const handleToggleComplete = (sectionId) => {
-    setCompletedSections(prev => ({
-      ...prev,
-      [sectionId]: !prev[sectionId]
-    }));
-  };
-  
-  // --- NEW: Functions to increase/decrease font size with limits ---
-  const increaseFontSize = () => setBaseFontSize(size => Math.min(size + 2, 24)); // Max 24px
-  const decreaseFontSize = () => setBaseFontSize(size => Math.max(size - 2, 12)); // Min 12px
-
-  return (
-    <>
-      <ExternalResources />
-      <div className="bg-gray-50 min-h-screen text-gray-800">
-        <div className="container mx-auto p-4 sm:p-6 md:p-8 max-w-4xl">
-          
-          <header className="mb-10 p-8 bg-white rounded-2xl shadow-md border border-gray-200">
-            <p className="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-2">Go Beyond with AI</p>
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-3 tracking-tight">{moduleData.title}</h1>
-            <p className="text-lg text-gray-600 mb-6">{moduleData.goal}</p>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <span className="font-semibold text-gray-700">Tools Covered:</span>
-              <div className="flex flex-wrap gap-2">
-                {moduleData.tools.map(tool => (
-                  <a key={tool.name} href={tool.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm font-semibold rounded-full hover:bg-indigo-200 hover:text-indigo-900 transition-colors">
-                    {tool.name}
-                  </a>
-                ))}
-              </div>
-            </div>
-            {/* --- NEW: Font Size Controls --- */}
-            <div className="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between flex-wrap gap-4">
-                <span className="font-semibold text-gray-700 text-base">Accessibility</span>
-                <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-600">Font Size</span>
-                    <button 
-                        onClick={decreaseFontSize} 
-                        className="p-1 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        disabled={baseFontSize <= 12}
-                        aria-label="Decrease font size"
-                    >
-                        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4"></path></svg>
-                    </button>
-                    <span className="font-bold text-gray-800 w-12 text-center text-base tabular-nums">{baseFontSize}px</span>
-                    <button 
-                        onClick={increaseFontSize} 
-                        className="p-1 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        disabled={baseFontSize >= 24}
-                        aria-label="Increase font size"
-                    >
-                        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                    </button>
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <!-- Header Section -->
+        <header class="mb-16 bg-white p-8 rounded-2xl shadow-lg shadow-slate-200/70 border border-slate-200/80">
+            <h2 class="text-sm font-bold text-indigo-600 uppercase tracking-wider">Go Beyond with AI</h2>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mt-2">Module 4: Delegating with Generative AI</h1>
+            <p class="text-lg text-slate-600 mt-4 max-w-3xl">Learn how to create and run powerful business chatbots directly in AI tools — no external software needed.</p>
+            
+            <div class="mt-6 pt-6 border-t border-slate-200 space-y-6">
+                <div>
+                    <h3 class="text-sm font-medium text-slate-500 mb-3">Tools Covered</h3>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="https://poe.com" target="_blank" class="inline-block px-3 py-1 text-sm font-medium text-indigo-700 bg-indigo-100 rounded-full hover:bg-indigo-200 transition-colors">Poe</a>
+                        <a href="https://ai.meta.com" target="_blank" class="inline-block px-3 py-1 text-sm font-medium text-indigo-700 bg-indigo-100 rounded-full hover:bg-indigo-200 transition-colors">Meta AI Studio</a>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                     <h3 class="text-sm font-medium text-slate-500">Accessibility</h3>
+                     <div class="flex items-center gap-2">
+                        <span class="text-sm text-slate-600">Font Size</span>
+                        <button id="decrease-font" class="w-8 h-8 flex items-center justify-center rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-lg transition-colors" aria-label="Decrease font size">-</button>
+                        <span id="font-size-display" class="w-10 text-center text-sm font-semibold text-slate-800">16px</span>
+                        <button id="increase-font" class="w-8 h-8 flex items-center justify-center rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-lg transition-colors" aria-label="Increase font size">+</button>
+                    </div>
                 </div>
             </div>
-          </header>
+        </header>
 
-          <div className="mb-10">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-bold text-gray-700">Your Progress</h2>
-              <span className="text-lg font-bold text-indigo-600">{Math.round(progress)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-4">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-4 rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%` }}></div>
-            </div>
-          </div>
-
-          <main className="space-y-6">
-            {moduleData.sections.map((section) => (
-              <SectionCard key={section.id} section={section} isCompleted={!!completedSections[section.id]} onToggleComplete={() => handleToggleComplete(section.id)} />
-            ))}
-          </main>
-          
-          {progress === 100 && !showCertificate && (
-              <div className="mt-12 p-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl shadow-lg text-center text-white">
-                  <h3 className="text-3xl font-bold mb-2">Congratulations!</h3>
-                  <p className="opacity-90 mb-6">You've completed the module. Enter your name to generate your certificate.</p>
-                  <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-                      <input
-                          type="text"
-                          placeholder="Enter your full name"
-                          value={userName}
-                          onChange={(e) => setUserName(e.target.value)}
-                          className="px-4 py-2 border border-gray-300 rounded-lg w-full max-w-xs focus:ring-2 focus:ring-white outline-none text-gray-800"
-                      />
-                      <button
-                          onClick={() => { if(userName) setShowCertificate(true); }}
-                          disabled={!userName}
-                          className="w-full sm:w-auto px-8 py-2.5 bg-white text-indigo-600 font-bold rounded-lg hover:bg-opacity-90 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all transform hover:scale-105"
-                      >
-                          Generate Certificate
-                      </button>
-                  </div>
-              </div>
-          )}
-          
-          <footer className="text-center mt-12 text-gray-500">
-              <p>Designed by <a href="https://linkedin.com/in/fajarudinakbar" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline font-semibold">Fajarudin Akbar</a></p>
-          </footer>
-        </div>
-
-        {showCertificate && (
-          <Certificate name={userName} onClose={() => setShowCertificate(false)} />
-        )}
-      </div>
-    </>
-  );
-}
-
-// --- Section Components ---
-const SectionCard = ({ section, isCompleted, onToggleComplete }) => {
-  const [isOpen, setIsOpen] = useState(true);
-  return (
-    <div className={`bg-white rounded-2xl shadow-md border transition-all duration-300 ${isCompleted ? 'border-green-300 ring-2 ring-green-200' : 'border-gray-200'}`}>
-      <div className="p-5 sm:p-6 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <span className="text-3xl">{section.icon}</span>
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-800">{section.title}</h3>
-          </div>
-          <div className="flex items-center gap-4">
-            {isCompleted && <Icon name="CheckCircle" className="w-7 h-7 text-green-500" />}
-            <Icon name={isOpen ? "ChevronUp" : "ChevronDown"} className="w-6 h-6 text-gray-500" />
-          </div>
-        </div>
-      </div>
-      {isOpen && (
-        <div className="px-5 sm:px-6 pb-6 border-t border-gray-200">
-          <div className="mt-4 prose prose-indigo max-w-none prose-li:my-1 prose-p:my-2">
-            {renderSectionContent(section)}
-          </div>
-          <div className="mt-6 text-right">
-            <button onClick={(e) => { e.stopPropagation(); onToggleComplete(); }} className={`px-5 py-2 text-sm font-bold rounded-lg transition-colors transform hover:scale-105 ${isCompleted ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
-              {isCompleted ? 'Completed!' : 'Mark as Complete'}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const renderSectionContent = (section) => {
-  if (section.isQuiz) { return <QuizSection section={section} />; }
-  switch (section.title) {
-    case "Understanding the Building Blocks":
-      return (
-        <div>
-          {section.content.map((item, index) => (<p key={index}><strong>{item.term}:</strong> {item.definition}</p>))}
-          {section.note && <p className="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-800">{section.note}</p>}
-        </div>
-      );
-    case "Prompt Templates & Keywords":
-      return (
-        <div className="space-y-6">
-          {section.content.map((template, index) => (
-            <div key={index} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
-              <h4 className="font-bold text-lg text-indigo-700">{template.type}</h4>
-              <p><strong>Best for:</strong> {template.use}</p>
-              <div className="mt-2">
-                <strong>Keywords:</strong>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {template.keywords.map(kw => <span key={kw} className="px-2.5 py-1 bg-gray-200 text-sm font-medium rounded-md">{kw}</span>)}
+        <main class="space-y-5">
+            <!-- Section 1 -->
+            <details class="bg-white p-4 sm:p-6 rounded-xl shadow-lg shadow-slate-200/70 border border-slate-200/80 group transition-all duration-300 ease-in-out" open>
+                <summary class="section-summary flex justify-between items-center cursor-pointer font-semibold text-xl text-slate-900 rounded-lg p-3 transition-colors">
+                    <span class="flex items-center">
+                        <span class="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-100 mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                        </span>
+                        1. Introduction: Why Business Chatbots?
+                    </span>
+                    <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center transform transition-transform duration-300 group-open:rotate-180">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </summary>
+                <div class="mt-4 text-slate-800 space-y-4 pt-4 border-t border-slate-200 pl-16 pr-3">
+                    <p>Modern businesses face an endless stream of customer inquiries, routine tasks, and repetitive questions. AI chatbots can:</p>
+                    <ul class="list-disc list-inside space-y-2 pl-4 text-slate-700">
+                        <li>Save time by automating FAQs</li>
+                        <li>Improve response speed and consistency</li>
+                        <li>Handle multiple conversations simultaneously</li>
+                        <li>Provide 24/7 availability</li>
+                    </ul>
+                    <h3 class="font-semibold text-lg text-slate-900">Example Uses in Business:</h3>
+                    <ul class="list-disc list-inside space-y-2 pl-4 text-slate-700">
+                        <li><strong>Consulting Firm:</strong> Automate initial client intake questions</li>
+                        <li><strong>E-commerce Store:</strong> Provide instant product information</li>
+                        <li><strong>Corporate HR:</strong> Answer employee policy queries</li>
+                        <li><strong>Marketing Agency:</strong> Qualify leads before sales calls</li>
+                    </ul>
                 </div>
-              </div>
-              <div className="mt-3">
-                <strong>Template:</strong>
-                <p className="mt-1 p-3 bg-gray-200 rounded-md font-mono text-sm text-gray-700">"{template.template}"</p>
-              </div>
+            </details>
+
+            <!-- Section 2 -->
+            <details class="bg-white p-4 sm:p-6 rounded-xl shadow-lg shadow-slate-200/70 border border-slate-200/80 group transition-all duration-300 ease-in-out">
+                <summary class="section-summary flex justify-between items-center cursor-pointer font-semibold text-xl text-slate-900 rounded-lg p-3 transition-colors">
+                    <span class="flex items-center">
+                         <span class="flex items-center justify-center w-10 h-10 rounded-full bg-teal-100 mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                        </span>
+                        2. Poe Chatbot for Text-Based Business Tasks
+                    </span>
+                     <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center transform transition-transform duration-300 group-open:rotate-180">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </summary>
+                <div class="mt-4 text-slate-800 space-y-6 pt-4 border-t border-slate-200 pl-16 pr-3">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-900">2.1 What is Poe?</h3>
+                        <p class="mt-2">Poe (<a href="https://poe.com" target="_blank" class="text-indigo-600 hover:underline font-semibold">poe.com</a>) is a platform where you can create a custom AI assistant by setting its instructions, personality, and example prompts.</p>
+                        <p class="mt-2 font-semibold text-slate-900">Best for:</p>
+                        <ul class="list-disc list-inside mt-2 space-y-1 text-slate-700">
+                            <li>Client Q&A</li>
+                            <li>Proposal or report generation</li>
+                            <li>Internal knowledge base</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-900">2.2 Step-by-Step Guide</h3>
+                        <ol class="list-decimal list-inside mt-2 space-y-3 pl-4 text-slate-700">
+                            <li><strong>Sign Up & Access Bot Builder:</strong> Go to <a href="https://poe.com" target="_blank" class="text-indigo-600 hover:underline font-semibold">poe.com</a>, sign up, and click "Create a bot."</li>
+                            <li><strong>Choose a Base Model:</strong> Select Claude for detailed explanations or GPT-4o for short, clear answers.</li>
+                            <li><strong>Write Bot Instructions:</strong> Clearly define the bot's role, audience, tone, and boundaries.</li>
+                            <li><strong>Add a Welcome Message:</strong> Create a welcoming first message for users.</li>
+                            <li><strong>Create Suggested Prompts:</strong> Provide clickable examples for users.</li>
+                            <li><strong>Save & Test:</strong> Test with various queries to check tone, accuracy, and formatting.</li>
+                        </ol>
+                    </div>
+                    <div class="practice-box bg-teal-50/50 p-5 rounded-lg border-teal-500">
+                        <h3 class="font-bold text-lg text-teal-900">Poe Self-Guided Practice</h3>
+                        <div class="mt-3 space-y-3">
+                            <p class="font-semibold text-teal-800">Task: Create a Poe bot for a business of your choice.</p>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Write bot instructions (150–200 words).</label>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Add welcome message (1–2 sentences).</label>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Add 3 suggested prompts.</label>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Test and refine based on feedback.</label>
+                        </div>
+                        <div class="mt-5 space-y-3">
+                             <p class="font-semibold text-teal-800">Self-Check Questions:</p>
+                             <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Does the bot answer in a way that matches your brand tone?</label>
+                             <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Does it know when to escalate to a human?</label>
+                             <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Are its answers consistent when asked similar questions?</label>
+                        </div>
+                        <div class="mt-5 border-t border-teal-200 pt-4">
+                             <label class="flex items-center font-bold text-emerald-700 hover:text-emerald-800 gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Mark Poe Chatbot Activity as Completed</label>
+                        </div>
+                    </div>
+                </div>
+            </details>
+            
+            <!-- Section 3 -->
+            <details class="bg-white p-4 sm:p-6 rounded-xl shadow-lg shadow-slate-200/70 border border-slate-200/80 group transition-all duration-300 ease-in-out">
+                <summary class="section-summary flex justify-between items-center cursor-pointer font-semibold text-xl text-slate-900 rounded-lg p-3 transition-colors">
+                    <span class="flex items-center">
+                        <span class="flex items-center justify-center w-10 h-10 rounded-full bg-sky-100 mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        </span>
+                        3. Meta AI Studio for Social Media Engagement
+                    </span>
+                     <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center transform transition-transform duration-300 group-open:rotate-180">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </summary>
+                <div class="mt-4 text-slate-800 space-y-6 pt-4 border-t border-slate-200 pl-16 pr-3">
+                     <div>
+                        <h3 class="font-bold text-lg text-slate-900">3.1 What is Meta AI Studio?</h3>
+                        <p class="mt-2">Meta AI Studio lets you create AI characters for Messenger, Instagram, and WhatsApp.</p>
+                        <p class="mt-2 font-semibold text-slate-900">Best for:</p>
+                        <ul class="list-disc list-inside mt-2 space-y-1 text-slate-700">
+                            <li>Marketing interactions</li>
+                            <li>Customer service on social channels</li>
+                            <li>Lead qualification</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-900">3.2 Step-by-Step Guide</h3>
+                        <ol class="list-decimal list-inside mt-2 space-y-3 pl-4 text-slate-700">
+                            <li><strong>Access AI Studio:</strong> Visit <a href="https://ai.meta.com" target="_blank" class="text-indigo-600 hover:underline font-semibold">ai.meta.com</a>, log in, and click "Create AI."</li>
+                            <li><strong>Name & Describe:</strong> Give your bot a clear name and description.</li>
+                            <li><strong>Set Personality & Behavior:</strong> Define its style, do's, and don'ts.</li>
+                            <li><strong>Add Welcome Message & Starters:</strong> Craft a greeting and provide example prompts.</li>
+                            <li><strong>Enable Features:</strong> Enable search if needed and set public/private access.</li>
+                            <li><strong>Publish & Test:</strong> Test for quick responses, clear options, and brand-safe language.</li>
+                        </ol>
+                    </div>
+                    <div class="practice-box bg-sky-50/50 p-5 rounded-lg border-sky-500">
+                        <h3 class="font-bold text-lg text-sky-900">Meta AI Studio Self-Guided Practice</h3>
+                        <div class="mt-3 space-y-3">
+                            <p class="font-semibold text-sky-800">Task: Build a social media bot for a business scenario.</p>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Define name, description, and personality.</label>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Add welcome message and 3 starter prompts.</label>
+                            <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Test with a clear query, a vague request, and an off-topic question.</label>
+                        </div>
+                        <div class="mt-5 space-y-3">
+                             <p class="font-semibold text-sky-800">Self-Check Questions:</p>
+                             <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Does it engage naturally and encourage conversation?</label>
+                             <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Does it avoid unsafe or off-brand responses?</label>
+                             <label class="flex items-center gap-3 cursor-pointer text-slate-800"><input type="checkbox" class="custom-checkbox progress-checkbox">Is it easy for the user to continue chatting?</label>
+                        </div>
+                        <div class="mt-5 border-t border-sky-200 pt-4">
+                             <label class="flex items-center font-bold text-emerald-700 hover:text-emerald-800 gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Mark Meta AI Studio Activity as Completed</label>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <!-- Section 4 -->
+             <details class="bg-white p-4 sm:p-6 rounded-xl shadow-lg shadow-slate-200/70 border border-slate-200/80 group transition-all duration-300 ease-in-out">
+                <summary class="section-summary flex justify-between items-center cursor-pointer font-semibold text-xl text-slate-900 rounded-lg p-3 transition-colors">
+                    <span class="flex items-center">
+                        <span class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-100 mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </span>
+                        4. Comparative Reflection
+                    </span>
+                     <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center transform transition-transform duration-300 group-open:rotate-180">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </summary>
+                <div class="mt-4 text-slate-800 space-y-4 pt-4 border-t border-slate-200 pl-16 pr-3">
+                    <p class="font-semibold text-slate-900">Exercise:</p>
+                    <ol class="list-decimal list-inside space-y-2 pl-4 text-slate-700">
+                        <li>Pick one business role (e.g., HR Assistant, Sales Agent).</li>
+                        <li>Create the same bot in both Poe and Meta AI Studio.</li>
+                        <li>Test both using an FAQ, a complex request, and an off-topic question.</li>
+                    </ol>
+                    <p class="font-semibold text-slate-900">Record:</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Which gave better answers?</label>
+                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Which was easier to adjust?</label>
+                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Which is more suitable for your audience?</label>
+                    </div>
+                    <div class="mt-4 border-t pt-4">
+                        <label class="flex items-center font-bold text-emerald-700 hover:text-emerald-800 gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Mark Comparative Reflection as Completed</label>
+                    </div>
+                </div>
+            </details>
+
+            <!-- Section 5 -->
+            <details class="bg-white p-4 sm:p-6 rounded-xl shadow-lg shadow-slate-200/70 border border-slate-200/80 group transition-all duration-300 ease-in-out">
+                <summary class="section-summary flex justify-between items-center cursor-pointer font-semibold text-xl text-slate-900 rounded-lg p-3 transition-colors">
+                    <span class="flex items-center">
+                         <span class="flex items-center justify-center w-10 h-10 rounded-full bg-rose-100 mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        </span>
+                        5. Final Project Submission
+                    </span>
+                     <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center transform transition-transform duration-300 group-open:rotate-180">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </summary>
+                <div class="mt-4 space-y-4 pt-4 border-t border-slate-200 pl-16 pr-3">
+                    <h4 class="font-bold text-lg text-slate-900">Deliverables:</h4>
+                    <ul class="list-disc list-inside space-y-2 pl-4 text-slate-700">
+                        <li>Screenshots of your Poe and Meta AI bot setup</li>
+                        <li>A short reflection on the process (200–300 words)</li>
+                        <li>Links to your two published chatbots</li>
+                    </ul>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="reflection" class="block text-sm font-medium text-slate-700">Written Reflection (200-300 words):</label>
+                            <textarea id="reflection" rows="6" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Reflect on the process, comparing the two platforms."></textarea>
+                        </div>
+                         <div>
+                            <label for="chatbot-links" class="block text-sm font-medium text-slate-700">Share the link to your chatbots:</label>
+                            <textarea id="chatbot-links" rows="4" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Paste the links to your Poe and Meta AI chatbots here."></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-4 border-t pt-4">
+                        <label class="flex items-center font-bold text-emerald-700 hover:text-emerald-800 gap-3 cursor-pointer"><input type="checkbox" class="custom-checkbox progress-checkbox">Mark Final Project as Completed</label>
+                    </div>
+                </div>
+            </details>
+        </main>
+        
+        <!-- Progress Bar and Controls -->
+        <div class="bg-white p-6 rounded-xl shadow-lg shadow-slate-200/70 mt-16 border border-slate-200">
+            <h2 class="text-xl font-semibold mb-4 text-slate-900">Module Progress & Completion</h2>
+            <div class="w-full bg-slate-200 rounded-full h-3 mb-4">
+                <div id="progressBar" class="bg-gradient-to-r from-indigo-500 to-teal-400 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
-          ))}
+            <div class="flex flex-col sm:flex-row gap-4 items-center">
+                <button id="completeButton" class="w-full sm:w-auto bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300">Mark Module as Complete</button>
+                <button id="downloadPortfolioButton" class="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300">Download Portfolio</button>
+            </div>
+            <div class="mt-6 pt-6 border-t border-slate-200">
+                 <label for="certificateName" class="block text-sm font-medium text-slate-700 mb-2">Your Name for Certificate:</label>
+                 <div class="flex flex-col sm:flex-row gap-4 items-center">
+                    <input type="text" id="certificateName" class="block w-full sm:flex-grow px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter your full name">
+                    <button id="certificateButton" class="w-full sm:w-auto bg-slate-400 text-white font-bold py-2 px-6 rounded-lg cursor-not-allowed transition-all duration-300" disabled>Generate Certificate</button>
+                 </div>
+            </div>
+             <p id="completionMessage" class="text-green-600 font-semibold mt-4 hidden">Module completed! You can now enter your name and generate your certificate.</p>
         </div>
-      );
-    default:
-      return (<ul className="list-disc list-inside space-y-2">{section.content.map((item, index) => (<li key={index}>{item}</li>))}</ul>);
-  }
-};
-
-const QuizSection = ({ section }) => {
-  const [answers, setAnswers] = useState({});
-  const handleAnswer = (id, value) => { setAnswers(prev => ({ ...prev, [id]: value })); };
-  return (
-    <div>
-      <div className="space-y-4">
-        {section.content.map(q => (
-          <div key={q.id}>
-            <p className="font-semibold">{q.question}</p>
-            <div className="flex gap-4 mt-2">
-              <button onClick={() => handleAnswer(q.id, true)} className={`px-4 py-1.5 rounded-md text-sm font-semibold ${answers[q.id] === true ? 'bg-green-500 text-white ring-2 ring-green-300' : 'bg-gray-200'}`}>Yes</button>
-              <button onClick={() => handleAnswer(q.id, false)} className={`px-4 py-1.5 rounded-md text-sm font-semibold ${answers[q.id] === false ? 'bg-red-500 text-white ring-2 ring-red-300' : 'bg-gray-200'}`}>No</button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <p className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 font-semibold">{section.conclusion}</p>
     </div>
-  );
-};
 
-// --- Certificate Component ---
-const Certificate = ({ name, onClose }) => {
-  const certificateRef = useRef(null);
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Element Selections ---
+            const checkboxes = document.querySelectorAll('.progress-checkbox');
+            const progressBar = document.getElementById('progressBar');
+            const completeButton = document.getElementById('completeButton');
+            const certificateButton = document.getElementById('certificateButton');
+            const downloadPortfolioButton = document.getElementById('downloadPortfolioButton');
+            const completionMessage = document.getElementById('completionMessage');
+            const certificateNameInput = document.getElementById('certificateName');
+            const totalCheckboxes = checkboxes.length;
 
-  const handleDownloadPdf = () => {
-    // Check if the libraries are loaded on the window object
-    if (window.jspdf && window.html2canvas) {
-        const { jsPDF } = window.jspdf;
-        const input = certificateRef.current;
-        if (input) {
-            html2canvas(input, {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: null,
-            }).then((canvas) => {
-                const imgData = canvas.toDataURL('image/png');
-                // The certificate is in landscape, so we set the PDF orientation accordingly.
-                const pdf = new jsPDF({
-                    orientation: 'landscape',
-                    unit: 'px',
-                    format: [canvas.width, canvas.height]
-                });
-                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-                pdf.save(`Certificate-${name.replace(/\s+/g, '-')}.pdf`);
+            // --- FONT SIZE CONTROLLER ---
+            const increaseFontBtn = document.getElementById('increase-font');
+            const decreaseFontBtn = document.getElementById('decrease-font');
+            const fontSizeDisplay = document.getElementById('font-size-display');
+            const htmlElement = document.documentElement;
+
+            const initialFontSize = 16; // Base font size in pixels for 1rem
+            const minFontSize = 12;
+            const maxFontSize = 22;
+            let currentFontSize = initialFontSize;
+
+            const updateFontSize = (size) => {
+                currentFontSize = Math.max(minFontSize, Math.min(maxFontSize, size));
+                htmlElement.style.fontSize = `${currentFontSize}px`;
+                fontSizeDisplay.textContent = `${currentFontSize}px`;
+            };
+
+            increaseFontBtn.addEventListener('click', () => {
+                updateFontSize(currentFontSize + 1);
             });
-        }
-    } else {
-        console.error("PDF generation libraries not loaded yet.");
-        // You could show a user-friendly message here
-    }
-  };
 
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
-  
-  const helveticaStyle = { fontFamily: "Helvetica, Arial, sans-serif" };
-  const timesItalicStyle = { fontFamily: "'Times New Roman', Times, serif", fontStyle: 'italic' };
-  const timesBoldStyle = { fontFamily: "'Times New Roman', Times, serif", fontWeight: 'bold' };
-  const timesStyle = { fontFamily: "'Times New Roman', Times, serif" };
+            decreaseFontBtn.addEventListener('click', () => {
+                updateFontSize(currentFontSize - 1);
+            });
+            
+            // --- Other Functions ---
+            const updateProgress = () => {
+                const checkedCount = document.querySelectorAll('.progress-checkbox:checked').length;
+                const progressPercentage = totalCheckboxes > 0 ? (checkedCount / totalCheckboxes) * 100 : 0;
+                progressBar.style.width = `${progressPercentage}%`;
+            };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div className="absolute top-4 right-4 flex gap-2 print:hidden z-10">
-          <button onClick={handleDownloadPdf} className="p-2 rounded-full bg-white hover:bg-gray-200 transition-colors shadow-lg">
-            <Icon name="Download" className="w-6 h-6 text-gray-700" />
-          </button>
-          <button onClick={onClose} className="p-2 rounded-full bg-white hover:bg-gray-200 transition-colors shadow-lg">
-            <Icon name="X" className="w-6 h-6 text-gray-700" />
-          </button>
-        </div>
-      <div ref={certificateRef} className="bg-slate-100 p-2 rounded-lg shadow-2xl w-full max-w-4xl border-8 border-indigo-800 relative">
-        <div className="text-center border-2 border-indigo-400 p-6 md:p-8">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl text-slate-800 tracking-wider" style={timesItalicStyle}>
-            Certificate of Completion
-          </h1>
-          <p className="text-base sm:text-lg text-slate-600 mt-8" style={helveticaStyle}>
-            This certificate is proudly presented to
-          </p>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl text-slate-900 my-6" style={timesBoldStyle}>
-            {name}
-          </h2>
-          <p className="text-base sm:text-lg text-slate-600" style={helveticaStyle}>
-            for successfully completing the Go Beyond with AI Module:
-          </p>
-          <p className="text-lg sm:text-xl text-slate-700 font-semibold my-4" style={helveticaStyle}>
-            Coding with Generative AI
-          </p>
-          <div className="flex flex-col sm:flex-row justify-between items-center mt-12 sm:mt-20 gap-8 sm:gap-0">
-            <div className="text-center">
-              <p className="border-t-2 border-slate-500 px-4 pt-2 text-lg" style={timesItalicStyle}>Fajarudin Akbar</p>
-              <p className="text-sm text-slate-500 mt-1" style={helveticaStyle}>Instructor</p>
-            </div>
-            <div className="text-center">
-              <p className="border-t-2 border-slate-500 px-4 pt-2 text-lg" style={timesStyle}>{currentDate}</p>
-              <p className="text-sm text-slate-500 mt-1" style={helveticaStyle}>Date</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+            const enableCertificateGeneration = () => {
+                completionMessage.classList.remove('hidden');
+                certificateButton.disabled = false;
+                certificateButton.classList.remove('bg-slate-400', 'cursor-not-allowed');
+                certificateButton.classList.add('bg-gradient-to-r', 'from-sky-500', 'to-cyan-500', 'hover:from-sky-600', 'hover:to-cyan-600', 'shadow-md', 'hover:shadow-lg', 'transform', 'hover:scale-105');
+            };
+
+            const downloadPortfolio = () => {
+                const reflection = document.getElementById('reflection').value;
+                const chatbotLinks = document.getElementById('chatbot-links').value;
+                
+                const portfolioContent = `
+My Portfolio - Module 4: Delegating with Generative AI
+=====================================================
+
+Written Reflection:
+-------------------
+${reflection || 'No reflection provided.'}
+
+Chatbot Links:
+--------------
+${chatbotLinks || 'No links provided.'}
+                `;
+
+                const blob = new Blob([portfolioContent.trim()], { type: 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'AI_Chatbot_Portfolio.txt';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            const generateCertificate = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'landscape' });
+                const userName = certificateNameInput.value.trim() || 'Your Name Here';
+                const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+                // Certificate Design
+                doc.setFillColor(248, 250, 252); // slate-50
+                doc.rect(0, 0, 297, 210, 'F');
+                doc.setLineWidth(1.5);
+                doc.setDrawColor(79, 70, 229); // indigo-600
+                doc.rect(10, 10, 277, 190);
+
+                doc.setFontSize(40);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(30, 41, 59); // slate-800
+                doc.text("Certificate of Completion", 148.5, 50, { align: "center" });
+
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'normal');
+                doc.text("This is to certify that", 148.5, 70, { align: "center" });
+
+                doc.setFontSize(32);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(15, 118, 110); // teal-600
+                doc.text(userName, 148.5, 95, { align: "center" });
+
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(51, 65, 85); // slate-600
+                doc.text("has successfully completed the Go Beyond with AI Module:", 148.5, 110, { align: "center" });
+
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(30, 41, 59);
+                doc.text("Delegating with Generative AI", 148.5, 125, { align: "center" });
+
+                doc.setLineWidth(0.5);
+                doc.setDrawColor(100, 116, 139); // slate-500
+                doc.line(50, 160, 120, 160);
+                doc.line(170, 160, 240, 160);
+
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                doc.text("Fajarudin Akbar", 85, 168, { align: "center" });
+                doc.setFont('helvetica', 'bold');
+                doc.text("Instructor", 85, 174, { align: "center" });
+
+                doc.setFont('helvetica', 'normal');
+                doc.text(date, 205, 168, { align: "center" });
+                doc.setFont('helvetica', 'bold');
+                doc.text("Date of Completion", 205, 174, { align: "center" });
+                
+                doc.save(`Certificate_${userName.replace(/ /g, '_')}.pdf`);
+            };
+
+            // --- Event Listeners ---
+            checkboxes.forEach(checkbox => checkbox.addEventListener('change', updateProgress));
+            completeButton.addEventListener('click', enableCertificateGeneration);
+            downloadPortfolioButton.addEventListener('click', downloadPortfolio);
+            certificateButton.addEventListener('click', generateCertificate);
+
+            // --- Initial State ---
+            updateProgress();
+            updateFontSize(initialFontSize); // Set initial font size display
+        });
+    </script>
+</body>
+</html>
