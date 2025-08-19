@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 5: AI as Companion | Enhanced UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- jsPDF library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --brand-primary: #4f46e5; /* indigo-600 */
+            --brand-secondary: #7c3aed; /* violet-600 */
+            --background-light: #f8fafc; /* slate-50 */
+            --background-dark: #0f172a; /* slate-900 */
+            --text-primary: #1e293b; /* slate-800 */
+            --text-secondary: #64748b; /* slate-500 */
+            --border-color: #e2e8f0; /* slate-200 */
+        }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-primary);
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Textured Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle, var(--border-color) 1px, transparent 1px);
+            background-size: 2rem 2rem;
+            opacity: 0.4;
+            z-index: -1;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #e2e8f0; }
+        ::-webkit-scrollbar-thumb { background: var(--brand-primary); border-radius: 10px; border: 2px solid #e2e8f0; }
+        ::-webkit-scrollbar-thumb:hover { background: #4338ca; }
+
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Sidebar transitions */
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        #main-content { transition: margin-left 0.3s ease-in-out; }
+        body.sidebar-hidden #sidebar { transform: translateX(-100%); }
+        body.sidebar-hidden #main-content { margin-left: 0; }
+        
+        /* Progress bar transition */
+        #progress-bar-fill { transition: width 0.5s ease-in-out; }
+
+        /* Custom focus rings */
+        textarea:focus, input:focus, button:focus-visible, a:focus-visible {
+            outline: 2px solid var(--brand-secondary) !important;
+            outline-offset: 2px;
+            border-radius: 0.375rem;
+        }
+        
+        /* Interactive Checklist */
+        .task-item label { transition: all 0.2s ease-in-out; }
+        .task-item input:checked + label {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+        .task-item input:checked + label .custom-checkbox {
+            background-color: var(--brand-primary);
+            border-color: var(--brand-primary);
+            transform: scale(1.05);
+        }
+        .task-item input:checked + label .custom-checkbox svg {
+            transform: scale(1);
+        }
+        .custom-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid #cbd5e1;
+            border-radius: 0.375rem;
+            flex-shrink: 0;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .custom-checkbox svg {
+            width: 1rem;
+            height: 1rem;
+            color: white;
+            transform: scale(0);
+            transition: transform 0.2s ease-in-out;
+        }
+        .task-item label:hover .custom-checkbox { border-color: var(--brand-primary); }
+
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(45deg, var(--brand-primary), var(--brand-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Card hover effect */
+        .info-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .info-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+        }
+
+        /* Toast Notification */
+        #toast {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: bottom 0.5s ease-in-out;
+            z-index: 1000;
+        }
+        #toast.show {
+            bottom: 20px;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="w-72 bg-slate-900 text-white shadow-2xl flex-shrink-0 flex flex-col fixed inset-y-0 left-0 z-30">
+            <div class="p-6 border-b border-slate-700/50">
+                <h1 class="text-2xl font-bold">
+                    <span>Go Beyond with AI</span>
+                </h1>
+                <p class="text-sm text-indigo-400 font-semibold mt-1">Module 5: AI as Companion</p>
+            </div>
+            <nav id="navigation" class="mt-6 px-4 flex-grow">
+                <a href="#introduction" class="nav-link block px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all duration-200">
+                    <span>Introduction</span>
+                </a>
+                <a href="#part1" class="nav-link block px-4 py-3 mt-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all duration-200">
+                    <span>ChatGPT Voice</span>
+                </a>
+                <a href="#part2" class="nav-link block px-4 py-3 mt-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all duration-200">
+                    <span>Google AI Studio</span>
+                </a>
+                <a href="#part3" class="nav-link block px-4 py-3 mt-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all duration-200">
+                    <span>Copilot Vision</span>
+                </a>
+                <a href="#final-project" class="nav-link block px-4 py-3 mt-1 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-all duration-200">
+                    <span>Project & Reflection</span>
+                </a>
+            </nav>
+            <div class="px-6 pb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-sm font-medium text-slate-400">Module Progress</p>
+                    <span id="progress-percent" class="text-sm font-semibold text-white">0%</span>
+                </div>
+                <div id="progress-bar-container" class="w-full bg-slate-700 rounded-full h-2.5" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-live="polite">
+                    <div id="progress-bar-fill" class="bg-gradient-to-r from-indigo-500 to-violet-500 h-2.5 rounded-full"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 overflow-y-auto ml-72">
+             <div class="p-4 sm:p-8">
+                <!-- Sticky Header -->
+                <div class="flex justify-between items-center mb-8 sticky top-0 bg-slate-50/80 backdrop-blur-sm py-3 z-20 -mx-4 px-4 sm:-mx-8 sm:px-8 border-b border-slate-200">
+                    <button id="toggleNavBtn" aria-label="Toggle Navigation" title="Toggle Navigation" class="p-2 rounded-full hover:bg-slate-200 transition-colors">
+                        <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-slate-700 hidden sm:inline">Font Size:</span>
+                        <button id="decreaseFontBtn" aria-label="Decrease font size" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-200 font-bold text-slate-700 transition-colors">-</button>
+                        <button id="resetFontBtn" aria-label="Reset font size" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-200 text-sm font-bold text-slate-700 transition-colors">A</button>
+                        <button id="increaseFontBtn" aria-label="Increase font size" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-200 font-bold text-slate-700 transition-colors">+</button>
+                    </div>
+                </div>
+
+                <div id="content-container" class="max-w-4xl mx-auto">
+                    <!-- Section: Introduction -->
+                    <section id="introduction" class="content-section">
+                        <h2 class="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-8">Module 5: <span class="gradient-text">AI as Companion</span></h2>
+                        <p class="text-lg text-slate-700 mb-6">AI has evolved beyond chat windows into real-time companions that see, hear, and interact with us more naturally. In this module, you will learn how to use three leading AI companions for professional contexts:</p>
+                        <div class="space-y-4 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <p><strong class="text-indigo-700">ChatGPT Voice</strong> – conversational, voice-based assistance.</p>
+                            <p><strong class="text-indigo-700">Google AI Studio Stream</strong> – streaming AI for real-time, multi-modal interactions.</p>
+                            <p><strong class="text-indigo-700">Copilot Vision</strong> – visual + voice AI guidance within Windows and Edge.</p>
+                        </div>
+                        <p class="mt-8 font-semibold text-slate-900 text-lg">By the end, you will:</p>
+                        <ul class="list-none space-y-3 mt-4 text-slate-700 text-lg">
+                            <li class="flex items-start"><svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>Understand the features of each tool.</span></li>
+                            <li class="flex items-start"><svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>Practice with guided, hands-on activities.</span></li>
+                            <li class="flex items-start"><svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>Reflect on how these companions can enhance your professional and business workflows.</span></li>
+                        </ul>
+                    </section>
+                    
+                    <!-- Section: Part 1 -->
+                    <section id="part1" class="content-section">
+                        <h2 class="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-8">Part 1: <span class="gradient-text">ChatGPT Voice</span></h2>
+                        <div class="space-y-8">
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 class="text-xl font-semibold mb-2 text-slate-900">What It Is</h3>
+                                <p class="text-slate-700">ChatGPT Voice turns ChatGPT into a conversational partner that can listen and respond in real time. It’s available in the ChatGPT app (iOS, Android, and desktop).</p>
+                            </div>
+                             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 class="text-xl font-semibold mb-3 text-slate-900">Key Features</h3>
+                                <ul class="list-disc list-inside space-y-2 text-slate-700">
+                                    <li>Natural voice conversations with near real-time responses.</li>
+                                    <li>Multi-turn dialogue—carry natural back-and-forth without typing.</li>
+                                    <li>Cross-device availability (mobile + desktop).</li>
+                                    <li>Accessibility—hands-free interaction when typing is not convenient.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 class="text-xl font-semibold mb-3 text-slate-900">How to Use</h3>
+                                <ol class="list-decimal list-inside space-y-2 text-slate-700">
+                                    <li>Open the ChatGPT app.</li>
+                                    <li>Tap the headphone icon to enter voice mode.</li>
+                                    <li>Choose a voice.</li>
+                                    <li>Speak naturally, pause to listen, then continue.</li>
+                                </ol>
+                            </div>
+                            <h3 class="text-2xl font-bold pt-4 text-slate-900">Practice Activities</h3>
+                            <div class="bg-white p-6 rounded-xl border border-slate-200 space-y-4">
+                                <div class="task-item"><input type="checkbox" id="task1-1" class="hidden"><label for="task1-1" class="flex items-center cursor-pointer"><span class="custom-checkbox"><svg viewBox='0 0 16 16' fill='currentColor' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg></span><span class="ml-3"><span class="font-semibold">Client Meeting Prep:</span> Ask ChatGPT Voice to roleplay a client and practice pitching your service.</span></label></div>
+                                <div class="task-item"><input type="checkbox" id="task1-2" class="hidden"><label for="task1-2" class="flex items-center cursor-pointer"><span class="custom-checkbox"><svg viewBox='0 0 16 16' fill='currentColor' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg></span><span class="ml-3"><span class="font-semibold">Decision Making:</span> Say, “Talk me through the pros and cons of expanding into a new market.”</span></label></div>
+                                <div class="task-item"><input type="checkbox" id="task1-3" class="hidden"><label for="task1-3" class="flex items-center cursor-pointer"><span class="custom-checkbox"><svg viewBox='0 0 16 16' fill='currentColor' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg></span><span class="ml-3"><span class="font-semibold">Daily Companion:</span> Use it while walking—“Summarize today’s top 3 business news headlines.”</span></label></div>
+                                <textarea class="w-full mt-4 p-3 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Add your reflection notes here..."></textarea>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Section: Part 2 -->
+                    <section id="part2" class="content-section">
+                        <h2 class="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-8">Part 2: <span class="gradient-text">Google AI Studio</span></h2>
+                        <div class="space-y-8">
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 class="text-xl font-semibold mb-2 text-slate-900">What It Is</h3>
+                                <p class="text-slate-700">Google AI Studio Stream (part of Google AI Studio) provides real-time streaming outputs from Gemini models. It supports multimodal input (text, images, audio, video) and continuous generation, making it ideal for building dynamic assistants.</p>
+                            </div>
+                             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 class="text-xl font-semibold mb-3 text-slate-900">Key Features</h3>
+                                <ul class="list-disc list-inside space-y-2 text-slate-700">
+                                    <li>Real-time responses with streaming text output.</li>
+                                    <li>Multi-modal support—processes text, audio, and visuals.</li>
+                                    <li>API-first design—integrate into apps or websites.</li>
+                                    <li>Scalable for business—customer support bots, live translation, co-pilot apps.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 class="text-xl font-semibold mb-3 text-slate-900">How to Use</h3>
+                                <ol class="list-decimal list-inside space-y-2 text-slate-700">
+                                    <li>Go to Google AI Studio.</li>
+                                    <li>Start a Stream project.</li>
+                                    <li>Input queries via text or audio.</li>
+                                    <li>Observe how responses stream in real time.</li>
+                                </ol>
+                            </div>
+                            <h3 class="text-2xl font-bold pt-4 text-slate-900">Practice Activities</h3>
+                            <div class="bg-white p-6 rounded-xl border border-slate-200 space-y-4">
+                                <div class="task-item"><input type="checkbox" id="task2-1" class="hidden"><label for="task2-1" class="flex items-center cursor-pointer"><span class="custom-checkbox"><svg viewBox='0 0 16 16' fill='currentColor' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg></span><span class="ml-3"><span class="font-semibold">Customer Support Bot:</span> Simulate a customer asking about your product—stream responses in real time.</span></label></div>
+                                <div class="task-item"><input type="checkbox" id="task2-2" class="hidden"><label for="task2-2" class="flex items-center cursor-pointer"><span class="custom-checkbox"><svg viewBox='0 0 16 16' fill='currentColor' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg></span><span class="ml-3"><span class="font-semibold">Live Brainstorm:</span> Ask, “Generate 10 brand names and refine them as I give feedback.”</span></label></div>
+                                <div class="task-item"><input type="checkbox" id="task2-3" class="hidden"><label for="task2-3" class="flex items-center cursor-pointer"><span class="custom-checkbox"><svg viewBox='0 0 16 16' fill='currentColor' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg></span><span class="ml-3"><span class="font-semibold">Meeting Companion:</span> Upload an agenda and stream notes as you “simulate” a meeting.</span></label></div>
+                                <textarea class="w-full mt-4 p-3 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Add your reflection notes here..."></textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section: Part 3 -->
+                    <section id="part3" class="content-section">
+                        <h2 class="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-8">Part 3: <span class="gradient-text">Copilot Vision</span></h2>
+                        <div class="space-y-8">
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 class="text-xl font-semibold mb-2 text-slate-900">What It Is</h3>
+                                <p class="text-slate-700">Copilot Vision is Microsoft’s AI that can see your screen, hear your requests, and guide you interactively. It works in Windows 11 and Edge.</p>
+                            </div>
+                             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 class="text-xl font-semibold mb-3 text-slate-900">Key Features</h3>
+                                <ul class="list-disc list-inside space-y-2 text-slate-700">
+                                    <li>Desktop & App Sharing – AI sees exactly what you see.</li>
+                                    <li>Voice Interaction – speak naturally for real-time help.</li>
+                                    <li>“Highlights” Guidance – Copilot visually marks where to click or what to edit.</li>
+                                    <li>Context-Aware Advice – works across documents, slides, settings, and web pages.</li>
+                                    <li>Privacy Control – opt-in only, visuals not stored.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 class="text-xl font-semibold mb-3 text-slate-900">How to Use</h3>
+                                <ol class="list-decimal list-inside space-y-2 text-slate-700">
+                                    <li>Open Copilot in Windows or Edge.</li>
+                                    <li>Click the eyeglasses icon to enable Vision.</li>
+                                    <li>Select a window or your desktop to share.</li>
+                                    <li>Speak your request (e.g., “Show me how to adjust slide formatting.”).</li>
+                                    <li>Watch Copilot highlight and guide step by step.</li>
+                                </ol>
+                            </div>
+                            <h3 class="text-2xl font-bold pt-4 text-slate-900">Practice Activities</h3>
+                            <div class="bg-white p-6 rounded-xl border border-slate-200 space-y-4">
+                                <div class="task-item"><input type="checkbox" id="task3-1" class="hidden"><label for="task3-1" class="flex items-center cursor-pointer"><span class="custom-checkbox"><svg viewBox='0 0 16 16' fill='currentColor' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg></span><span class="ml-3"><span class="font-semibold">Resume Review:</span> Ask Copilot to highlight weak points in your resume.</span></label></div>
+                                <div class="task-item"><input type="checkbox" id="task3-2" class="hidden"><label for="task3-2" class="flex items-center cursor-pointer"><span class="custom-checkbox"><svg viewBox='0 0 16 16' fill='currentColor' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg></span><span class="ml-3"><span class="font-semibold">Presentation Cleanup:</span> Share a slide deck and request, “Show me which slides are too text-heavy.”</span></label></div>
+                                <div class="task-item"><input type="checkbox" id="task3-3" class="hidden"><label for="task3-3" class="flex items-center cursor-pointer"><span class="custom-checkbox"><svg viewBox='0 0 16 16' fill='currentColor' xmlns='http://www.w3.org/2000/svg'><path d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/></svg></span><span class="ml-3"><span class="font-semibold">Browser Reading:</span> Open an article and ask, “Point out the main insight on this page.”</span></label></div>
+                                <textarea class="w-full mt-4 p-3 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Add your reflection notes here..."></textarea>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Section: Final Project -->
+                    <section id="final-project" class="content-section">
+                        <h2 class="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-8"><span class="gradient-text">Final Project & Reflection</span></h2>
+                        <h3 class="text-2xl font-bold mb-4 text-slate-900">Reflection & Integration</h3>
+                        <div class="bg-amber-100/50 border-l-4 border-amber-500 p-6 rounded-r-lg space-y-6">
+                            <div><p class="font-semibold mb-2 text-slate-900">Which AI companion felt most natural for your work style—voice, stream, or visual?</p><textarea class="w-full p-3 border rounded-lg bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="Your thoughts..."></textarea></div>
+                            <div><p class="font-semibold mb-2 text-slate-900">How could you integrate these tools into daily professional tasks (e.g., client prep, project management, design, support)?</p><textarea class="w-full p-3 border rounded-lg bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="Your thoughts..."></textarea></div>
+                            <div><p class="font-semibold mb-2 text-slate-900">What privacy or ethical considerations should you keep in mind when using AI that listens, streams, or sees your screen?</p><textarea class="w-full p-3 border rounded-lg bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="Your thoughts..."></textarea></div>
+                        </div>
+
+                        <h3 class="text-2xl font-bold mt-12 mb-4 text-slate-900">Self-Guided Project</h3>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200">
+                            <p class="font-semibold mb-4 text-slate-800">Choose one scenario and complete it using at least two AI companions:</p>
+                            <ul class="list-disc list-inside space-y-3 text-slate-700 mb-6">
+                                <li><strong class="text-slate-800">Investor Pitch Prep</strong> – Use ChatGPT Voice to rehearse, Copilot Vision to polish slides.</li>
+                                <li><strong class="text-slate-800">Customer Support Simulation</strong> – Use Google AI Studio Stream to power live responses, Copilot Vision to navigate FAQs.</li>
+                                <li><strong class="text-slate-800">Productivity Boost</strong> – Use ChatGPT Voice as a daily planner, Copilot Vision to automate repetitive document formatting.</li>
+                            </ul>
+                            <div>
+                                <p class="font-semibold mb-2 text-slate-900">Write a short reflection: “What did I learn, and how can I apply this tomorrow in my business/professional life?”</p>
+                                <textarea class="w-full p-3 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Your project reflection..."></textarea>
+                            </div>
+                        </div>
+
+                        <div id="completion-section" class="mt-12"><h2 class="text-3xl font-extrabold text-slate-900 mb-6">Module Completion</h2><div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200"><p class="text-slate-700 mb-4">Once you have completed all activities and reflections, generate your personalized certificate and portfolio.</p><div class="mb-4"><label for="userName" class="block text-sm font-medium text-slate-800 mb-1">Enter Your Full Name for the Certificate:</label><input type="text" id="userName" class="w-full p-3 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g., Fajarudin Akbar"></div><div class="flex flex-col sm:flex-row gap-4 mt-6"><button id="generateCertificateBtn" class="w-full sm:w-auto flex-1 bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-all duration-200 shadow-sm hover:shadow-lg disabled:bg-indigo-400 flex items-center justify-center"><span>Generate Certificate</span></button><button id="generatePortfolioBtn" class="w-full sm:w-auto flex-1 bg-slate-800 text-white font-semibold py-3 px-4 rounded-lg hover:bg-slate-900 transition-all duration-200 shadow-sm hover:shadow-lg disabled:bg-slate-500 flex items-center justify-center"><span>Generate Portfolio</span></button></div></div></div>
+                    </section>
+                </div>
+                
+                <footer class="text-center text-sm text-slate-600 mt-12 pb-4">
+                    Designed by <a href="https://linkedin.com/in/fajarudinakbar" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-700 hover:underline">Fajarudin Akbar</a>
+                </footer>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="bg-red-500 text-white font-semibold py-2 px-5 rounded-full shadow-lg">
+        <span id="toast-message"></span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- DOM Element Cache ---
+            const elements = {
+                body: document.body,
+                sidebar: document.getElementById('sidebar'),
+                mainContent: document.getElementById('main-content'),
+                toggleNavBtn: document.getElementById('toggleNavBtn'),
+                increaseFontBtn: document.getElementById('increaseFontBtn'),
+                decreaseFontBtn: document.getElementById('decreaseFontBtn'),
+                resetFontBtn: document.getElementById('resetFontBtn'),
+                htmlEl: document.documentElement,
+                navLinks: document.querySelectorAll('.nav-link'),
+                contentSections: document.querySelectorAll('.content-section'),
+                navigation: document.getElementById('navigation'),
+                progressBarFill: document.getElementById('progress-bar-fill'),
+                progressPercent: document.getElementById('progress-percent'),
+                progressBarContainer: document.getElementById('progress-bar-container'),
+                generateCertificateBtn: document.getElementById('generateCertificateBtn'),
+                generatePortfolioBtn: document.getElementById('generatePortfolioBtn'),
+                userNameInput: document.getElementById('userName'),
+                taskCheckboxes: document.querySelectorAll('.task-item input[type="checkbox"]'),
+                toast: document.getElementById('toast'),
+                toastMessage: document.getElementById('toast-message'),
+            };
+
+            const totalTasks = elements.taskCheckboxes.length;
+
+            /**
+             * Updates the progress bar and percentage based on completed tasks.
+             */
+            function updateProgress() {
+                const completedTasks = document.querySelectorAll('.task-item input[type="checkbox"]:checked').length;
+                const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+                const progressRounded = Math.round(progress);
+                elements.progressBarFill.style.width = `${progress}%`;
+                elements.progressPercent.textContent = `${progressRounded}%`;
+                elements.progressBarContainer.setAttribute('aria-valuenow', progressRounded);
+            }
+
+            /**
+             * Initializes the single-page navigation logic.
+             */
+            function initNavigation() {
+                const showSection = (hash) => {
+                    const targetHash = (hash === '' || hash === '#') ? '#introduction' : hash;
+                    elements.contentSections.forEach(section => section.classList.toggle('active', `#${section.id}` === targetHash));
+                    
+                    elements.navLinks.forEach(link => {
+                        const isActive = link.getAttribute('href') === targetHash;
+                        link.classList.toggle('bg-slate-800', isActive);
+                        link.classList.toggle('text-white', isActive);
+                        link.classList.toggle('font-semibold', isActive);
+                        link.classList.toggle('text-slate-300', !isActive);
+                    });
+                };
+
+                elements.navigation.addEventListener('click', (e) => {
+                    const link = e.target.closest('a');
+                    if (link && link.classList.contains('nav-link')) {
+                        e.preventDefault();
+                        const hash = link.getAttribute('href');
+                        if (window.location.hash !== hash) {
+                            history.pushState(null, null, hash);
+                            showSection(hash);
+                            // Scroll to top of main content on navigation
+                            elements.mainContent.scrollTo(0, 0);
+                        }
+                    }
+                });
+
+                window.addEventListener('popstate', () => showSection(window.location.hash));
+                showSection(window.location.hash || '#introduction');
+            }
+
+            /**
+             * Initializes UI control listeners (sidebar toggle, font size).
+             */
+            function initUIControls() {
+                elements.toggleNavBtn.addEventListener('click', () => {
+                    elements.body.classList.toggle('sidebar-hidden');
+                    // Adjust main content margin based on sidebar visibility
+                    if (elements.body.classList.contains('sidebar-hidden')) {
+                        elements.mainContent.style.marginLeft = '0';
+                    } else {
+                        elements.mainContent.style.marginLeft = '18rem'; // w-72
+                    }
+                });
+                
+                // Set initial margin for main content
+                elements.mainContent.style.marginLeft = '18rem';
+
+
+                let currentFontSize = 16;
+                const step = 1, minSize = 13, maxSize = 19;
+                const updateFontSize = () => { elements.htmlEl.style.fontSize = `${currentFontSize}px`; };
+                elements.increaseFontBtn.addEventListener('click', () => { if (currentFontSize < maxSize) { currentFontSize += step; updateFontSize(); } });
+                elements.decreaseFontBtn.addEventListener('click', () => { if (currentFontSize > minSize) { currentFontSize -= step; updateFontSize(); } });
+                elements.resetFontBtn.addEventListener('click', () => { currentFontSize = 16; updateFontSize(); });
+                elements.taskCheckboxes.forEach(checkbox => checkbox.addEventListener('change', updateProgress));
+            }
+
+            /**
+             * Initializes listeners for certificate and portfolio generation.
+             */
+            function initGenerators() {
+                elements.generateCertificateBtn.addEventListener('click', handleCertificateGeneration);
+                elements.generatePortfolioBtn.addEventListener('click', handlePortfolioGeneration);
+            }
+
+            /**
+             * Handles the certificate generation using jsPDF with a new design.
+             */
+            function handleCertificateGeneration() {
+                const userName = elements.userNameInput.value.trim();
+                if (!userName) {
+                    showToast("Please enter your name first!");
+                    elements.userNameInput.focus();
+                    return;
+                }
+                toggleButtonState(elements.generateCertificateBtn, true, 'Crafting Certificate...');
+                
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const centerX = pageWidth / 2;
+                const margin = 15;
+
+                // --- Certificate Design ---
+                doc.setFillColor(241, 245, 249); // slate-100
+                doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+                doc.setFillColor(79, 70, 229); // indigo-600
+                doc.triangle(0, 0, 0, 40, 40, 0, 'F');
+                doc.triangle(pageWidth, pageHeight, pageWidth, pageHeight - 40, pageWidth - 40, pageHeight, 'F');
+
+                // --- Certificate Content ---
+                doc.setFont('Times-Roman', 'bold');
+                doc.setFontSize(36);
+                doc.setTextColor(15, 23, 42); // slate-900
+                doc.text('Certificate of Completion', centerX, margin + 25, { align: 'center' });
+
+                doc.setFont('Times-Roman', 'normal');
+                doc.setFontSize(16);
+                doc.setTextColor(51, 65, 85); // slate-700
+                doc.text('This certificate is proudly presented to', centerX, margin + 45, { align: 'center' });
+
+                doc.setFont('Times-Roman', 'bold');
+                doc.setFontSize(32);
+                doc.setTextColor(79, 70, 229); // indigo-600
+                doc.text(userName, centerX, margin + 65, { align: 'center' });
+
+                doc.setFont('Times-Roman', 'normal');
+                doc.setFontSize(16);
+                doc.text('for completing the Go Beyond with AI Module', centerX, margin + 80, { align: 'center' });
+
+                doc.setFont('Times-Roman', 'bold');
+                doc.setFontSize(20);
+                doc.setTextColor(30, 41, 59); // slate-800
+                doc.text('AI as Companion', centerX, margin + 95, { align: 'center' });
+
+                // --- Footer Section ---
+                const footerY = pageHeight - margin - 30;
+                doc.setFont('Times-Roman', 'normal');
+                doc.setFontSize(12);
+                doc.setTextColor(100, 116, 139); // slate-500
+                
+                const completionDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                doc.text(completionDate, margin + 20, footerY + 10);
+                doc.setLineWidth(0.5);
+                doc.setDrawColor(100, 116, 139);
+                doc.line(margin + 20, footerY + 12, margin + 60, footerY + 12);
+                doc.text('Date', margin + 20, footerY + 18);
+
+                doc.text('Fajarudin Akbar', pageWidth - margin - 20, footerY + 10, { align: 'right' });
+                doc.line(pageWidth - margin - 20, footerY + 12, pageWidth - margin - 60, footerY + 12);
+                doc.text('Instructor', pageWidth - margin - 20, footerY + 18, { align: 'right' });
+
+                doc.save(`AI_Companion_Certificate_${userName.replace(/ /g, '_')}.pdf`);
+                setTimeout(() => toggleButtonState(elements.generateCertificateBtn, false, 'Generate Certificate'), 1000);
+            }
+
+            /**
+             * Handles the portfolio TXT file generation process.
+             */
+            function handlePortfolioGeneration() {
+                toggleButtonState(elements.generatePortfolioBtn, true, 'Generating...');
+                let portfolioContent = "My Portfolio for Module 5: AI as Companion\n=============================================\n\n";
+                
+                elements.contentSections.forEach(section => {
+                    const mainTitle = section.querySelector('h2');
+                    if (mainTitle) {
+                        portfolioContent += `## ${mainTitle.innerText.replace(/\n/g, ' ')}\n\n`;
+                    }
+
+                    const textareas = section.querySelectorAll('textarea');
+                    textareas.forEach(textarea => {
+                        if (textarea.value.trim() !== '') {
+                            let titleText = "General Notes";
+                            const question = textarea.previousElementSibling;
+                            if (question && question.matches('p.font-semibold')) {
+                                titleText = question.innerText;
+                            }
+                            portfolioContent += `### ${titleText}\n${textarea.value.trim()}\n\n---\n\n`;
+                        }
+                    });
+                });
+
+                const blob = new Blob([portfolioContent], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'AI_Companion_Portfolio.txt';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                setTimeout(() => toggleButtonState(elements.generatePortfolioBtn, false, 'Generate Portfolio'), 1000);
+            }
+
+            /**
+             * Toggles the disabled state and text of a button.
+             */
+            function toggleButtonState(button, isDisabled, text) {
+                button.disabled = isDisabled;
+                const textSpan = button.querySelector('span');
+                if (textSpan) {
+                    textSpan.textContent = text;
+                }
+            }
+            
+            /**
+             * Shows a toast notification.
+             */
+            function showToast(message) {
+                elements.toastMessage.textContent = message;
+                elements.toast.classList.add('show');
+                setTimeout(() => {
+                    elements.toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // --- App Initialization ---
+            initNavigation();
+            initUIControls();
+            initGenerators();
+            updateProgress();
+        });
+    </script>
+
+</body>
+</html>
