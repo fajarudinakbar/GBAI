@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multimodal AI for Professionals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap');
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: radial-gradient(circle at top right, rgb(127 29 252 / 0.05), transparent 40%), radial-gradient(circle at bottom left, rgb(99 102 241 / 0.05), transparent 50%);
+            background-color: #f8fafc; /* bg-slate-50 */
+        }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+        .font-inter { font-family: 'Inter', sans-serif; }
+
+        /* Styles for the hidden div used for portfolio PDF generation */
+        .printable-container {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1240px; /* Fixed width for consistent rendering */
+            background: white;
+            color: black;
+        }
+        .printable-portfolio-styles h1, .printable-portfolio-styles h2, .printable-portfolio-styles h3 {
+            font-family: 'Poppins', sans-serif;
+        }
+        .printable-portfolio-styles p, .printable-portfolio-styles div, .printable-portfolio-styles li {
+            font-family: 'Inter', sans-serif;
+        }
+        .break-inside-avoid {
+            page-break-inside: avoid;
+        }
+
+        .animated-section {
+            transition: opacity 700ms ease-out, transform 700ms ease-out;
+            opacity: 0;
+            transform: translateY(2.5rem); /* translate-y-10 */
+        }
+        .animated-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div id="app-container">
+        <!-- App content will be rendered here by JavaScript -->
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- CONFIG & DATA ---
+        const lessonPlanData = [
+            { id: 'intro', isSpecial: true, icon: '💼', title: 'Multimodal AI for Professionals' },
+            { id: 'text-to-image', icon: '🖼️', title: 'Module 1: Text → Image', learn: { what: "This AI function transforms your written descriptions (prompts) into unique, custom images. You are essentially commissioning an infinitely fast artist who can create anything you can describe.", why: ["<b>Marketing & Branding:</b> Generate on-brand visuals for social media campaigns, ad creatives, and website banners without needing a graphic designer.", "<b>Product Design:</b> Create rapid prototypes and mock-ups of products, user interfaces, or physical spaces for presentations and stakeholder feedback.", "<b>Data Visualization:</b> Conceptualize complex data sets or processes into digestible infographics and charts for reports and presentations."] }, reflect: "How can you craft prompts that not only generate an image but also align with a specific brand identity (e.g., 'minimalist', 'luxurious', 'playful')? How can you ensure visual consistency across a series of generated images for a single campaign?", practice: { title: "Write your own Text-to-Image prompt:", description: "For this exercise, you will use an external tool, Google AI Studio, which has advanced image generation capabilities.", steps: ["Open Google AI Studio and navigate to the 'Generate Media' section.", "Select 'Gemini Image generation' or 'Imagen'.", "In the prompt box, type your detailed description of the image you want to create.", "Click the 'Run' button and wait for the image to be generated.", "Experiment by refining your prompt and running it again to see how the output changes."], examplePrompt: "A professional, modern, and multicultural image of two business teams shaking hands after a successful negotiation in a bright, contemporary office. The style should be optimistic and clear, suitable for a Business English lesson.", reflectionQuestion: "Did the generated image match your expectations? What specific words in your prompt were most effective?" } },
+            { id: 'image-to-text', icon: '📝', title: 'Module 2: Image → Text', learn: { what: "This function analyzes a provided image and generates a textual description, summary, or analysis based on your instructions. It's like having an expert observer who can articulate what they see.", why: ["<b>Market Research:</b> Upload competitor advertisements or social media posts and prompt the AI to analyze their visual strategy, target audience, and messaging.", "<b>Technical Documentation:</b> Generate step-by-step descriptions from screenshots for user manuals or training guides.", "<b>Data Analysis:</b> Extract key information and trends from charts, graphs, and other data visualizations within reports."] }, reflect: "How can you prompt the AI to move beyond simple description to genuine analysis? Consider prompts like 'Analyze the emotional impact of this image' or 'Identify the key marketing message in this advertisement.' How can you tailor the output for different audiences (e.g., an executive summary vs. a detailed report for an analyst)?", practice: { title: "Write your own Image-to-Text prompt:", description: "In Google AI Studio, you can upload an image and then provide a prompt to analyze it. Find an image relevant to your work and try it.", steps: ["Open Google AI Studio and select 'Freeform prompt'.", "In the prompt area, click the 'Image' button to upload an image file from your computer.", "After the image appears, type your analytical prompt (e.g., 'Describe the mood of this image') in the text box below it.", "Click the 'Run' button to get the AI's textual analysis."], examplePrompt: "This image shows a tense moment in a business negotiation. Analyze the body language and facial expressions of the key figures. Based on your analysis, write three discussion questions for advanced Business English students.", reflectionQuestion: "How accurate and insightful was the AI's analysis? What changes to your prompt could yield a deeper analysis?" } },
+            { id: 'text-to-audio', icon: '🔊', title: 'Module 3: Text → Audio', learn: { what: "This technology converts written text into natural-sounding spoken audio. You can control the voice, tone, and pacing through your prompts.", why: ["<b>Corporate Training:</b> Develop scalable, consistent voiceovers for e-learning modules and employee onboarding videos.", "<b>Product Demos:</b> Create clear, professional narration for software tutorials and product demonstration videos.", "<b>Accessibility:</b> Produce audio versions of internal communications, reports, and marketing materials to meet accessibility standards (WCAG)."] }, reflect: "A brand has a voice. How can you use prompts to ensure the AI's delivery matches your company's brand voice (e.g., 'authoritative and formal' vs. 'friendly and casual')? How can you use punctuation and phonetic spellings to fine-tune pronunciation and pacing for technical jargon?", practice: { title: "Write your own Text-to-Audio script:", description: "Google AI Studio now has a dedicated 'Generate speech' feature for creating audio from text.", steps: ["Open Google AI Studio and navigate to 'Generate Media > Generate speech'.", "For a single voice, use the 'Single-speaker audio' mode. Write your tone guidance in the 'Style instructions' box and your script in the 'Text' box.", "For a dialogue, select 'Multi-speaker audio'. Use the 'Script builder' to add speakers, assign voices, and write their lines.", "Click the 'Run' button to generate and listen to the audio.", "Experiment with different style instructions and voices to hear the impact on the final audio."], examplePrompt: "For a multi-speaker setup: In 'Style instructions', write 'A professional business negotiation.' For Speaker 1 (Mark), write 'Our final offer is $50,000.' For Speaker 2 (Siti), write 'Thank you, Mark. That's a strong offer, but we were hoping for a figure closer to $45,000.'", reflectionQuestion: "How did you use the 'Style instructions' and speaker settings to guide the AI's tone and delivery?" } },
+            { id: 'text-to-video', icon: '🎥', title: 'Module 4: Text → Video', learn: { what: "You provide a text description, and the AI generates a short video or animation.", why: ["Creating explainer animations", "Producing quick visual concepts for storyboards or ads"] }, reflect: "How could you use this to create a short, engaging social media ad for a new product? What details would you include in the prompt to ensure the video aligns with a specific brand style?", practice: { title: "Write your own Text-to-Video prompt:", description: "Practice creating a detailed prompt for a short video using the 'Veo' model in Google AI Studio.", steps: ["Open Google AI Studio and navigate to the 'Generate Media' section.", "Select 'Veo' to start a video generation prompt.", "Write a very descriptive prompt outlining the scenes, style, and duration of your video.", "Click 'Run' and see how the model interprets your instructions.", "Refine your prompt to be more specific about camera angles, colors, and pacing to improve the output."], examplePrompt: "Create a 10-second video animation of a rotating globe with country names appearing in sequence, in a clean, corporate style.", reflectionQuestion: "What elements of your prompt were most crucial for guiding the video's content and style?" } },
+            { id: 'video-to-text', icon: '✍️', title: 'Module 5: Video → Text', learn: { what: "You provide a video, and the AI describes or summarizes it.", why: ["Creating summaries of recorded meetings or events", "Generating captions or scripts from video for accessibility and content repurposing"] }, reflect: "Beyond simple summarization, how could you use this to analyze video content? For example, could you prompt it to identify the speaker's tone or the key visual elements in a marketing video?", practice: { title: "Write your own Video-to-Text prompt:", description: "In Google AI Studio, upload a short video and test your own analytical prompt.", steps: ["Open Google AI Studio and select 'Freeform prompt'.", "Click the 'File' button to upload a video from your computer.", "After the video appears, type your analytical prompt (e.g., 'Summarize this video') in the text box below it.", "Click 'Run' to get the AI's textual analysis of the video content."], examplePrompt: "Summarize the key message of this video in under 30 words and identify the speaker's tone.", reflectionQuestion: "How accurate was the summary and the tonal analysis? What other analytical tasks could you perform on video?" } },
+            { id: 'workflow-challenge', icon: '🚀', title: 'Capstone Project: Your Professional Scenario', isSpecial: true },
+            { id: 'conclusion', isSpecial: true, icon: '✅', title: 'Module Complete' },
+        ];
+        const TRACKABLE_ITEMS = ['text-to-image', 'image-to-text', 'text-to-audio', 'text-to-video', 'video-to-text', 'workflow-image', 'workflow-analysis', 'workflow-audio'];
+
+        // --- ICONS (SVG as functions) ---
+        const LightbulbIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`;
+        const MinusIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+        const PlusIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+        const ExternalLinkIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+
+        // --- STATE MANAGEMENT ---
+        const state = {
+            fontSize: 16,
+            userName: '',
+            moduleStarted: false,
+            scrolled: false,
+            capstoneContext: '',
+            isDownloading: false,
+            userData: {},
+            activeTabs: lessonPlanData.reduce((acc, section) => {
+                if (!section.isSpecial) acc[section.id] = 'learn';
+                return acc;
+            }, {})
+        };
+
+        const appContainer = document.getElementById('app-container');
+
+        // --- STATE UPDATE & RERENDER ---
+        function updateState(newState) {
+            Object.assign(state, newState);
+            renderApp();
+        }
+
+        function updateUserData(id, data) {
+            state.userData[id] = { ...state.userData[id], ...data };
+            const isComplete = (state.userData[id].prompt && state.userData[id].prompt.trim() !== '') || (state.userData[id].reflection && state.userData[id].reflection.trim() !== '');
+            state.userData[id].output = isComplete ? { completed: true } : null;
+
+            // Recalculate progress and update header
+            const header = document.querySelector('header');
+            if (header) {
+                const progressBarContainer = header.querySelector('.progress-bar-container');
+                if(progressBarContainer) progressBarContainer.innerHTML = ProgressBar();
+            }
+        }
+
+        // --- UI COMPONENTS (as functions returning HTML strings) ---
+        const ProgressBar = () => {
+            const completedCount = TRACKABLE_ITEMS.reduce((count, key) => {
+                return state.userData[key]?.output ? count + 1 : count;
+            }, 0);
+            const progress = (completedCount / TRACKABLE_ITEMS.length) * 100;
+            return `
+                <div class="w-full bg-slate-200 rounded-full h-2.5">
+                    <div class="bg-gradient-to-r from-indigo-500 to-purple-500 h-2.5 rounded-full transition-all duration-500 ease-out"
+                         style="width: ${progress}%">
+                    </div>
+                </div>`;
+        };
+        
+        const WelcomeScreen = () => `
+            <div class="text-center py-20 min-h-screen flex flex-col justify-center items-center px-4">
+                <h1 class="font-poppins text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">Go Beyond with AI</h1>
+                <p class="mt-4 text-2xl md:text-3xl font-poppins font-semibold text-slate-700">Multimodality with Generative AI</p>
+                <p class="mt-2 text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">A professional development module for mastering the art and science of AI communication.</p>
+                <div class="mt-12 w-full max-w-md mx-auto">
+                    <input
+                        type="text"
+                        value="${state.userName}"
+                        oninput="window.handleUserNameChange(this.value)"
+                        placeholder="Please enter your full name"
+                        class="w-full px-4 py-3 text-lg text-center border-2 border-slate-300 bg-white/50 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                        aria-label="Full Name Input"
+                    />
+                    <button
+                        onclick="window.handleStartModule()"
+                        ${!state.userName.trim() ? 'disabled' : ''}
+                        class="w-full mt-4 px-8 py-4 text-lg font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-md hover:shadow-xl hover:scale-105 disabled:from-slate-400 disabled:to-slate-400 disabled:cursor-not-allowed transition-all duration-300"
+                    >
+                        Begin Module
+                    </button>
+                </div>
+            </div>`;
+        
+        const AIStudioPractice = (props) => {
+            const { title, description, steps, examplePrompt, taskId, reflectionQuestion } = props;
+            const currentPrompt = state.userData[taskId]?.prompt || '';
+            const currentReflection = state.userData[taskId]?.reflection || '';
+            
+            return `
+                <div class="space-y-6">
+                    <div class="prose max-w-none">
+                        <p>${description}</p>
+                        <h4 class="font-poppins text-slate-900">How to Practice</h4>
+                        <ol class="list-decimal pl-5 space-y-2 text-slate-700">
+                            ${steps.map(step => `<li>${step}</li>`).join('')}
+                        </ol>
+                        <h4 class="font-poppins text-slate-900">Example Prompt</h4>
+                        <blockquote class="border-l-4 border-indigo-300 pl-4 italic text-slate-700">
+                            ${examplePrompt}
+                        </blockquote>
+                    </div>
+                    <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 font-bold text-lg text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+                        Practice in Google AI Studio ${ExternalLinkIcon()}
+                    </a>
+                    <div class="space-y-4 pt-4 border-t border-slate-200">
+                        <div>
+                            <label for="${taskId}-prompt" class="font-semibold text-slate-800 block mb-2">${title}</label>
+                            <textarea id="${taskId}-prompt" class="w-full h-24 p-3 border rounded-lg bg-white border-slate-300 focus:ring-2 focus:ring-indigo-500" placeholder="Enter your prompt here..." oninput="updateUserData('${taskId}', { prompt: this.value })">${currentPrompt}</textarea>
+                        </div>
+                        <div>
+                            <label for="${taskId}-reflection" class="font-semibold text-slate-800 block mb-2">Reflection: ${reflectionQuestion}</label>
+                            <textarea id="${taskId}-reflection" class="w-full h-24 p-3 border rounded-lg bg-white border-slate-300 focus:ring-2 focus:ring-indigo-500" placeholder="What were the results? What would you change next time?" oninput="updateUserData('${taskId}', { reflection: this.value })">${currentReflection}</textarea>
+                        </div>
+                    </div>
+                </div>`;
+        };
+
+        const LessonContent = (section) => {
+            const activeTab = state.activeTabs[section.id];
+            const currentReflection = state.userData[section.id]?.reflection || '';
+
+            let content = '';
+            if (activeTab === 'learn') {
+                content = `
+                    <div class="prose max-w-none prose-a:text-indigo-600">
+                        <h3 class="font-poppins text-slate-900">What It Is</h3>
+                        <p class="text-slate-800">${section.learn.what}</p>
+                        <h3 class="font-poppins mt-6 text-slate-900">Professional Applications</h3>
+                        <ul class="list-disc pl-5 space-y-2 text-slate-800">${section.learn.why.map(item => `<li>${item}</li>`).join('')}</ul>
+                    </div>`;
+            } else if (activeTab === 'practice') {
+                content = AIStudioPractice({ ...section.practice, taskId: section.id });
+            } else if (activeTab === 'reflect') {
+                content = `
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-lg">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 text-yellow-500">${LightbulbIcon()}</div>
+                            <div class="ml-4 w-full">
+                                <h3 class="font-poppins text-lg font-semibold text-yellow-900">Strategic Reflection</h3>
+                                <p class="mt-2 text-yellow-800">${section.reflect}</p>
+                                <textarea class="mt-4 w-full p-2 border border-yellow-300 rounded-md bg-white focus:ring-2 focus:ring-yellow-500" rows="4" placeholder="Enter your strategic analysis..." oninput="updateUserData('${section.id}', { reflection: this.value })">${currentReflection}</textarea>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            return `
+                <div class="flex border-b mb-6 border-slate-200">
+                    <button onclick="window.handleTabChange('${section.id}', 'learn')" class="px-4 py-2 font-poppins font-semibold transition-colors ${activeTab === 'learn' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}">Learn</button>
+                    <button onclick="window.handleTabChange('${section.id}', 'practice')" class="px-4 py-2 font-poppins font-semibold transition-colors ${activeTab === 'practice' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}">Practice</button>
+                    <button onclick="window.handleTabChange('${section.id}', 'reflect')" class="px-4 py-2 font-poppins font-semibold transition-colors ${activeTab === 'reflect' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}">Reflect</button>
+                </div>
+                <div>${content}</div>`;
+        };
+
+        const ModuleSection = (section) => {
+            let content = '';
+            if(section.id === 'intro') {
+                content = `<p class="prose max-w-none text-center text-lg text-slate-800">Welcome. This module is designed to equip you with the practical skills to leverage multimodal AI in a professional context. Mastering these tools will enhance your productivity, creativity, and ability to communicate effectively. Each section provides foundational knowledge, hands-on practice, and strategic reflection.</p>`;
+            } else if (section.id === 'conclusion') {
+                content = `<p class="prose max-w-none text-center text-lg text-slate-800">You have successfully completed this professional development module. You now possess a practical framework for using multimodal AI to drive results, enhance creativity, and accelerate your workflows. The next step is to integrate these skills into your daily tasks and projects.</p>`;
+            } else if (section.id === 'workflow-challenge') {
+                content = `
+                    <div class="prose max-w-none">
+                        <p class="text-slate-800">In this final capstone, you will define your own professional scenario and use the multimodal skills you've learned to create a set of related assets. This is your opportunity to apply everything to a context that is meaningful to you.</p>
+                        <div class="mt-6">
+                            <label for="capstone-context" class="font-poppins font-bold text-slate-900 block mb-2">Define Your Project Context</label>
+                            <textarea id="capstone-context" class="w-full h-28 p-3 border rounded-lg bg-white border-slate-300 focus:ring-2 focus:ring-indigo-500" oninput="state.capstoneContext = this.value" placeholder="e.g., 'Developing a short training module for new retail employees on handling customer complaints.'...">${state.capstoneContext}</textarea>
+                        </div>
+                        <h4 class="font-poppins mt-8 text-slate-900">Your Multimodal Workflow</h4>
+                        <div class="mt-6 space-y-6">
+                            <div class="p-4 border rounded-lg bg-slate-50 border-slate-200">
+                                ${AIStudioPractice({taskId: "workflow-image", title: "1. Core Visual (Text → Image)", description: "Generate a central image that captures the essence of your project.", steps: ["Open Google AI Studio and select 'Image prompt'.", "In the prompt box, type your detailed description.", "Click 'Run' and refine as needed."], examplePrompt: "Based on your project context, describe a powerful and relevant image. Consider the style, mood, key elements, and color palette.", reflectionQuestion:"How well did the result match your vision?"})}
+                            </div>
+                            <div class="p-4 border rounded-lg bg-slate-50 border-slate-200">
+                                 ${AIStudioPractice({taskId: "workflow-analysis", title: "2. Contextual Analysis (Image → Text)", description: "Find and upload a relevant image (e.g., a competitor's ad, a photo of your target audience, a chart) and prompt the AI to analyze it for your project.", steps: ["In AI Studio, select 'Freeform prompt'.", "Click the 'Image' button to upload your chosen image.", "Type your analytical prompt below the image and click 'Run'."], examplePrompt: "Based on your project context, what analysis would be most useful? For example: 'Analyze the visual strategy of this competitor's ad.'", reflectionQuestion:"What new insights did the analysis provide?"})}
+                            </div>
+                            <div class="p-4 border rounded-lg bg-slate-50 border-slate-200">
+                                ${AIStudioPractice({taskId: "workflow-audio", title: "3. Key Message (Text → Audio)", description: "Generate a short audio clip of a key message, script, or piece of dialogue for your project.", steps: ["This is a reflective exercise in prompt writing.", "In the text area below, write a script as if you were instructing an AI.", "Include details about the desired tone, pacing, and even specific pronunciations."], examplePrompt: "Write a script for a core piece of audio for your project. Consider the ideal speaker, tone, and pacing. For example: A confident and reassuring voice for a training module.", reflectionQuestion:"How did you attempt to control the audio output through your text prompt?"})}
+                            </div>
+                        </div>
+                    </div>`;
+            } else {
+                content = LessonContent(section);
+            }
+
+            return `
+            <div class="animated-section">
+                <section class="bg-white/50 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-shadow duration-300 rounded-xl border border-slate-200 mb-12 overflow-hidden">
+                    <header class="flex items-center gap-4 p-6 border-b border-slate-200 bg-white/30">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white shadow-lg text-2xl">${section.icon}</div>
+                        <h2 class="font-poppins text-2xl font-bold text-slate-800">${section.title}</h2>
+                    </header>
+                    <div class="p-6 md:p-8">${content}</div>
+                </section>
+            </div>
+            `;
+        };
+
+        const PrintablePortfolio = () => {
+             const regularTasks = lessonPlanData.filter(s => !s.isSpecial && s.id !== 'intro' && s.id !== 'conclusion');
+             const workflowTasks = [
+                { id: 'workflow-image', title: 'Core Visual (Text → Image)' },
+                { id: 'workflow-analysis', title: 'Contextual Analysis (Image → Text)' },
+                { id: 'workflow-audio', title: 'Key Message (Text → Audio)' },
+             ];
+            
+             const regularTaskHTML = regularTasks.map(section => {
+                 const sectionData = state.userData[section.id];
+                 if (!sectionData || (!sectionData.prompt && !sectionData.reflection)) return '';
+                 return `
+                    <div class="mb-8 p-6 border rounded-lg break-inside-avoid">
+                        <h2 class="text-2xl font-semibold mb-4 text-slate-800 font-poppins">${section.title}</h2>
+                        <h3 class="font-bold text-lg mt-4 mb-2 text-slate-700">Practice Prompt</h3>
+                        <p class="bg-slate-50 p-4 rounded-md border text-slate-800">${sectionData.prompt || "No prompt submitted."}</p>
+                        <h3 class="font-bold text-lg mt-4 mb-2 text-slate-700">Practice Reflection</h3>
+                        <p class="italic bg-yellow-50 p-4 rounded-md text-slate-800">${sectionData.reflection || "No reflection submitted."}</p>
+                    </div>`;
+             }).join('');
+
+             const workflowTaskHTML = workflowTasks.map(task => {
+                const taskData = state.userData[task.id];
+                if (!taskData || (!taskData.prompt && !taskData.reflection)) return '';
+                return `
+                    <div class="mt-6 border-t pt-4">
+                        <h3 class="font-bold text-lg capitalize text-slate-700">${task.title}</h3>
+                        ${taskData.prompt ? `<div class="my-2 p-4 rounded-md bg-slate-50 border"><p><b>Your Prompt:</b> ${taskData.prompt}</p></div>` : ''}
+                        ${taskData.reflection ? `<div class="my-2 p-4 rounded-md bg-yellow-50 border"><p><b>Your Reflection:</b> ${taskData.reflection}</p></div>` : ''}
+                    </div>`;
+             }).join('');
+
+             return `
+                <div class="printable-portfolio-styles">
+                    <div class="p-10">
+                        <div class="text-center mb-10">
+                            <h1 class="text-4xl font-bold mb-2 text-slate-900 font-poppins">Multimodal AI Portfolio</h1>
+                            <p class="text-xl text-slate-700 font-poppins">For: ${state.userName}</p>
+                        </div>
+                        ${regularTaskHTML}
+                        <div class="mb-8 p-6 border rounded-lg break-inside-avoid">
+                            <h2 class="text-2xl font-semibold mb-4 text-slate-800 font-poppins">Capstone Project: Your Professional Scenario</h2>
+                            <h3 class="font-bold text-lg mt-4 mb-2 text-slate-700">Project Context</h3>
+                            <p class="italic bg-indigo-50 p-4 rounded-md text-slate-800">${state.capstoneContext || "No context defined."}</p>
+                            ${workflowTaskHTML}
+                        </div>
+                    </div>
+                </div>`;
+        };
+
+        const MainApp = () => `
+            <header class="sticky top-0 z-40 transition-all duration-300 ${state.scrolled ? 'bg-white/80 backdrop-blur-lg shadow-md' : ''}">
+                <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center ${state.scrolled ? 'py-2' : 'py-4'}">
+                        <h1 class="font-poppins text-lg md:text-xl font-bold text-slate-800 truncate">Multimodality with Generative AI</h1>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <button onclick="window.handleFontSizeChange('decrease')" ${state.fontSize <= 14 ? 'disabled' : ''} class="p-1 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Decrease font size">${MinusIcon()}</button>
+                                <span class="text-sm font-medium w-10 text-center" aria-live="polite">Size: ${state.fontSize}</span>
+                                <button onclick="window.handleFontSizeChange('increase')" ${state.fontSize >= 22 ? 'disabled' : ''} class="p-1 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Increase font size">${PlusIcon()}</button>
+                            </div>
+                            <p class="text-sm text-slate-600 hidden sm:block">Welcome, ${state.userName}</p>
+                        </div>
+                    </div>
+                    ${state.scrolled ? `<div class="pb-2 progress-bar-container">${ProgressBar()}</div>` : ''}
+                </div>
+            </header>
+            <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                ${lessonPlanData.map(ModuleSection).join('')}
+                 <div class="animated-section">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+                        <button onclick="window.handleDownload('portfolio')" ${state.isDownloading ? 'disabled' : ''} class="w-full p-4 font-bold text-lg text-white bg-gradient-to-r from-teal-500 to-cyan-600 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:from-slate-400 disabled:to-slate-400">
+                            ${state.isDownloading ? 'Generating PDF...' : 'Download Your Portfolio'}
+                        </button>
+                        <button onclick="window.handleDownload('certificate')" ${state.isDownloading ? 'disabled' : ''} class="w-full p-4 font-bold text-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:from-slate-400 disabled:to-slate-400">
+                            ${state.isDownloading ? 'Generating PDF...' : 'Download Certificate'}
+                        </button>
+                    </div>
+                </div>
+            </main>
+            <footer class="text-center py-8 px-4">
+                <p class="text-sm text-slate-500">Designed by <a href="https://linkedin.com/in/fajarudinakbar" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">Fajarudin Akbar</a></p>
+            </footer>
+            <div id="printable-container" class="printable-container"></div>
+        `;
+        
+        // --- EVENT HANDLERS & GLOBAL FUNCTIONS ---
+        window.handleUserNameChange = (value) => {
+            state.userName = value;
+            const button = document.querySelector('button');
+            if (button) button.disabled = !value.trim();
+        };
+
+        window.handleStartModule = () => {
+            if (state.userName.trim()) {
+                updateState({ moduleStarted: true });
+            }
+        };
+
+        window.handleTabChange = (sectionId, tab) => {
+            state.activeTabs[sectionId] = tab;
+            // A bit of a trick to rerender only the changed module to avoid flickering
+            const moduleElement = document.querySelector(`#app-container [data-module-id="${sectionId}"]`);
+            if(moduleElement) {
+                const sectionData = lessonPlanData.find(s => s.id === sectionId);
+                moduleElement.outerHTML = ModuleSection(sectionData); // Replace the whole module
+            } else {
+                 renderApp(); // Fallback to full render
+            }
+        };
+
+        window.handleFontSizeChange = (direction) => {
+            const FONT_MIN = 14;
+            const FONT_MAX = 22;
+            const FONT_STEP = 1;
+            if (direction === 'increase') {
+                state.fontSize = Math.min(FONT_MAX, state.fontSize + FONT_STEP);
+            } else {
+                state.fontSize = Math.max(FONT_MIN, state.fontSize - FONT_STEP);
+            }
+            document.documentElement.style.fontSize = `${state.fontSize}px`;
+            renderApp(); // Rerender to update the size text and button states
+        };
+        
+        // --- PDF Generation Logic ---
+        const generateCertificatePdf = (doc, userName) => {
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 15;
+
+            doc.setFillColor(248, 250, 252);
+            doc.rect(0, 0, pageWidth, pageHeight, 'F');
+            doc.setDrawColor(79, 70, 229);
+            doc.setLineWidth(1.5);
+            doc.rect(margin, margin, pageWidth - margin * 2, pageHeight - margin * 2);
+            doc.setDrawColor(165, 180, 252);
+            doc.setLineWidth(0.5);
+            doc.rect(margin + 2, margin + 2, pageWidth - (margin + 2) * 2, pageHeight - (margin + 2) * 2);
+            doc.setTextColor('#64748b');
+            doc.setFont('times', 'italic');
+            doc.setFontSize(28);
+            doc.text('Certificate of Completion', pageWidth / 2, margin + 30, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor('#1e293b');
+            doc.setFontSize(14);
+            doc.text('This certificate is proudly presented to', pageWidth / 2, margin + 50, { align: 'center' });
+            doc.setTextColor('#4338ca');
+            doc.setFont('times', 'bold');
+            doc.setFontSize(48);
+            doc.text(userName || 'Participant', pageWidth / 2, margin + 75, { align: 'center' });
+            doc.setTextColor('#1e293b');
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(14);
+            doc.text('for successfully completing the Go Beyond with AI Module', pageWidth / 2, margin + 95, { align: 'center' });
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.text('Multimodality with Generative AI', pageWidth / 2, margin + 105, { align: 'center' });
+
+            const footerY = pageHeight - margin - 35;
+            const signatureX = margin + 50;
+            const dateX = pageWidth - margin - 50;
+            doc.setFont('times', 'italic');
+            doc.setFontSize(16);
+            doc.text('Fajarudin Akbar', signatureX, footerY + 10, { align: 'center' });
+            doc.setLineWidth(0.2);
+            doc.line(signatureX - 35, footerY + 12, signatureX + 35, footerY + 12);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor('#64748b');
+            doc.text('Course Designer, EdTech Practitioner', signatureX, footerY + 18, { align: 'center' });
+            const completionDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            doc.setTextColor('#1e293b');
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.text(completionDate, dateX, footerY + 10, { align: 'center' });
+            doc.line(dateX - 35, footerY + 12, dateX + 35, footerY + 12);
+            doc.setFontSize(10);
+            doc.setTextColor('#64748b');
+            doc.text('Date of Completion', dateX, footerY + 18, { align: 'center' });
+        };
+
+        window.handleDownload = async (type) => {
+            if (state.isDownloading) return;
+            if (typeof window.jspdf === 'undefined' || (type === 'portfolio' && typeof window.html2canvas === 'undefined')) {
+                console.warn("PDF generation libraries are still loading. Please try again in a moment.");
+                return;
+            }
+            
+            updateState({ isDownloading: true });
+
+            const { jsPDF } = window.jspdf;
+            const sanitizedUserName = state.userName.replace(/\s/g, '_') || 'User';
+
+            try {
+                if (type === 'certificate') {
+                    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+                    generateCertificatePdf(doc, state.userName);
+                    doc.save(`Certificate-${sanitizedUserName}.pdf`);
+                } else if (type === 'portfolio') {
+                    const printableContainer = document.getElementById('printable-container');
+                    printableContainer.innerHTML = PrintablePortfolio();
+                    
+                    const canvas = await window.html2canvas(printableContainer.firstElementChild, {
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        width: 1240,
+                        windowWidth: 1240,
+                    });
+                    
+                    const imgData = canvas.toDataURL('image/png');
+                    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                    
+                    const pdfWidth = doc.internal.pageSize.getWidth();
+                    const pdfHeight = doc.internal.pageSize.getHeight();
+                    const imgProps = doc.getImageProperties(imgData);
+                    const ratio = imgProps.height / imgProps.width;
+                    const imgHeight = pdfWidth * ratio;
+
+                    let heightLeft = imgHeight;
+                    let position = 0;
+
+                    doc.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+                    heightLeft -= pdfHeight;
+
+                    while (heightLeft > 0) {
+                        position = position - pdfHeight;
+                        doc.addPage();
+                        doc.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+                        heightLeft -= pdfHeight;
+                    }
+                    doc.save(`Portfolio-${sanitizedUserName}.pdf`);
+                }
+            } catch (error) {
+                console.error("Failed to generate PDF:", error);
+            } finally {
+                updateState({ isDownloading: false });
+            }
+        };
+
+
+        // --- MAIN RENDER FUNCTION ---
+        function renderApp() {
+            if (!state.moduleStarted) {
+                appContainer.innerHTML = WelcomeScreen();
+            } else {
+                appContainer.innerHTML = MainApp();
+                // Add IntersectionObserver for animations after rendering
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1 });
+                document.querySelectorAll('.animated-section').forEach(section => observer.observe(section));
+            }
+        }
+        
+        // --- INITIALIZATION ---
+        document.documentElement.style.fontSize = `${state.fontSize}px`;
+        window.addEventListener('scroll', () => {
+            const shouldBeScrolled = window.scrollY > 10;
+            if (state.scrolled !== shouldBeScrolled) {
+                updateState({ scrolled: shouldBeScrolled });
+            }
+        });
+        
+        renderApp(); // Initial render
+    });
+    </script>
+</body>
+</html>
