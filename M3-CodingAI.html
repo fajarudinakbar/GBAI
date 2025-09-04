@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 3: Coding with Generative AI</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        /* Apply the Inter font family as the default */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Simple transition for collapsible sections */
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .collapsible-content.open {
+            max-height: 2000px; /* Adjust if content is very long */
+        }
+        /* Styles for the prose class from Tailwind Typography, simplified for this context */
+        .prose ul { list-style-position: inside; }
+        .prose li { margin-top: 0.25rem; margin-bottom: 0.25rem; }
+        .prose p { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div id="app-container">
+        <!-- App content will be rendered here by JavaScript -->
+    </div>
+
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+
+    <script>
+        // --- Data ---
+        const moduleData = {
+          title: "Module 3: Coding with Generative AI",
+          tools: [
+            { name: "ChatGPT Canvas", url: "https://chat.openai.com/" },
+            { name: "Gemini Canvas", url: "https://gemini.google.com/" },
+            { name: "Claude Artifact", url: "https://claude.ai/" }
+          ],
+          goal: "Learn how to create and run websites, web apps, and multimedia pages directly in AI tools — no external software needed.",
+          sections: [
+            {
+              id: 1,
+              title: "How Coding with AI Works",
+              icon: "✨",
+              content: [
+                "Choose what you want to build — a simple website, an interactive web app, or a page with multimedia (images, audio, video).",
+                "Write a clear prompt — describe what you want, and include important details like layout, colors, and features.",
+                "Paste your prompt into an AI tool like ChatGPT Canvas, Gemini Canvas, or Claude Artifact.",
+                "Click 'Preview' — the tool will generate the code and show your project live.",
+                "Adjust and improve — add more features or change the design by refining your prompt."
+              ]
+            },
+            {
+              id: 2,
+              title: "Understanding the Building Blocks",
+              icon: "🧱",
+              content: [
+                { term: "HTML (Structure)", definition: "The skeleton of your page. It decides what’s on the page, like text, images, headings, and links." },
+                { term: "CSS (Style)", definition: "The clothing and appearance. It decides how the page looks, including colors, fonts, spacing, and layout." },
+                { term: "JavaScript (Interaction)", definition: "The brain and muscles. It makes your page do things, like making buttons work, playing animations, or saving data from forms." },
+              ],
+              note: "You don’t need to be an expert in these. The AI writes the code for you when you provide a good prompt!"
+            },
+            {
+              id: 3,
+              title: "Prompt Templates & Keywords",
+              icon: "📝",
+              content: [
+                {
+                  type: "A. Static Website (Simple Pages)",
+                  use: "Portfolios, company pages, product info.",
+                  keywords: ["responsive design", "single-page", "header", "navigation", "footer", "hero section", "color scheme", "Google Fonts", "mobile-friendly"],
+                  template: 'Create a single-page responsive website with a hero section, about section, services section, and contact form. Use a [color scheme] and [font].'
+                },
+                {
+                  type: "B. Web App (Interactive Pages)",
+                  use: "Tools, games, calculators, to-do lists.",
+                  keywords: ["interactive", "dynamic", "JavaScript functionality", "user input", "form validation", "real-time updates", "clean layout"],
+                  template: 'Build a responsive [type of app] with an input field, buttons, and saved data. Use a minimalist design.'
+                },
+                {
+                  type: "C. Multimodal Page (Text + Media)",
+                  use: "Travel guides, online courses, product showcases.",
+                  keywords: ["embed images", "audio", "video", "captions", "interactive gallery", "slideshow", "multilingual support"],
+                  template: 'Create an interactive page with [media types], captions, and a responsive layout.'
+                }
+              ]
+            },
+            {
+              id: 4,
+              title: "Practice Tasks",
+              icon: "✅",
+              content: [
+                "Use the Static Website template to make a personal portfolio.",
+                "Use the Web App template to create a simple tool (e.g., a to-do list).",
+                "Use the Multimodal template to make a travel guide with images and audio.",
+                "Open Preview and test your project — adjust your prompts until you’re happy with the result."
+              ]
+            },
+            {
+              id: 5,
+              title: "Self-Check Before Moving On",
+              icon: "🤔",
+              isQuiz: true,
+              content: [
+                { question: "Can you explain what HTML, CSS, and JavaScript do in your own words?", id: "q1" },
+                { question: "Can you list three keywords for each type of coding project (Static, Web App, Multimodal)?", id: "q2" },
+                { question: "Have you successfully created at least one project in Preview mode?", id: "q3" }
+              ],
+              conclusion: "If you can answer “yes” to all, you’re ready for the final project!"
+            },
+            {
+              id: 6,
+              title: "Final Project",
+              icon: "🏆",
+              content: [
+                "Pick one type of project: a Static Website, a Web App, or a Multimodal Page.",
+                "Write your own unique prompt using at least 5 keywords from the lists provided earlier.",
+                "Generate your project in an AI Canvas or Artifact tool.",
+                "Preview and refine your project until it's complete and you're proud of it.",
+                "Share your final project preview!"
+              ]
+            }
+          ]
+        };
+
+        // --- App State (like React's useState) ---
+        let state = {
+            completedSections: {},
+            userName: '',
+            baseFontSize: 16,
+        };
+
+        // --- SVG Icons ---
+        const icons = {
+            ChevronUp: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-gray-500"><path d="m18 15-6-6-6 6"/></svg>`,
+            ChevronDown: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-gray-500"><path d="m6 9 6 6 6-6"/></svg>`,
+            CheckCircle: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 text-green-500"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>`,
+            X: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-gray-700"><path d="M18 6 6 18M6 6l12 12"/></svg>`,
+            Download: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-gray-700"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>`,
+        };
+
+        // --- Content Rendering Functions ---
+        function renderSectionContent(section) {
+            if (section.isQuiz) {
+                return `
+                    <div class="space-y-4">
+                        ${section.content.map(q => `
+                            <div data-quiz-question="${q.id}">
+                                <p class="font-semibold">${q.question}</p>
+                                <div class="flex gap-4 mt-2">
+                                    <button data-action="answer-quiz" data-value="true" class="px-4 py-1.5 rounded-md text-sm font-semibold bg-gray-200">Yes</button>
+                                    <button data-action="answer-quiz" data-value="false" class="px-4 py-1.5 rounded-md text-sm font-semibold bg-gray-200">No</button>
+                                </div>
+                            </div>`).join('')}
+                    </div>
+                    <p class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 font-semibold">${section.conclusion}</p>
+                `;
+            }
+
+            switch (section.title) {
+                case "Understanding the Building Blocks":
+                    return `
+                        <div>
+                            ${section.content.map(item => `<p><strong>${item.term}:</strong> ${item.definition}</p>`).join('')}
+                            ${section.note ? `<p class="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-800">${section.note}</p>` : ''}
+                        </div>`;
+                case "Prompt Templates & Keywords":
+                    return `
+                        <div class="space-y-6">
+                            ${section.content.map(template => `
+                                <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                                    <h4 class="font-bold text-lg text-indigo-700">${template.type}</h4>
+                                    <p><strong>Best for:</strong> ${template.use}</p>
+                                    <div class="mt-2">
+                                        <strong>Keywords:</strong>
+                                        <div class="flex flex-wrap gap-2 mt-1">
+                                            ${template.keywords.map(kw => `<span class="px-2.5 py-1 bg-gray-200 text-sm font-medium rounded-md">${kw}</span>`).join('')}
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <strong>Template:</strong>
+                                        <p class="mt-1 p-3 bg-gray-200 rounded-md font-mono text-sm text-gray-700">"${template.template}"</p>
+                                    </div>
+                                </div>`).join('')}
+                        </div>`;
+                default:
+                    return `<ul class="list-disc list-inside space-y-2">${section.content.map(item => `<li>${item}</li>`).join('')}</ul>`;
+            }
+        }
+        
+        function renderCertificate() {
+            const currentDate = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+            return `
+                <div id="certificate-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+                    <div class="absolute top-4 right-4 flex gap-2 z-10">
+                        <button data-action="download-pdf" class="p-2 rounded-full bg-white hover:bg-gray-200 transition-colors shadow-lg">${icons.Download}</button>
+                        <button data-action="close-certificate" class="p-2 rounded-full bg-white hover:bg-gray-200 transition-colors shadow-lg">${icons.X}</button>
+                    </div>
+                    <div id="certificate-content" class="bg-slate-100 p-2 rounded-lg shadow-2xl w-full max-w-4xl border-8 border-indigo-800 relative">
+                        <div class="text-center border-2 border-indigo-400 p-6 md:p-8" style="font-family: 'Times New Roman', Times, serif;">
+                            <h1 class="text-3xl sm:text-4xl md:text-5xl text-slate-800 tracking-wider" style="font-style: italic;">Certificate of Completion</h1>
+                            <p class="text-base sm:text-lg text-slate-600 mt-8" style="font-family: Helvetica, Arial, sans-serif;">This certificate is proudly presented to</p>
+                            <h2 class="text-4xl sm:text-5xl md:text-6xl text-slate-900 my-6" style="font-weight: bold;">${state.userName || 'Anonymous Learner'}</h2>
+                            <p class="text-base sm:text-lg text-slate-600" style="font-family: Helvetica, Arial, sans-serif;">for successfully completing the Go Beyond with AI Module:</p>
+                            <p class="text-lg sm:text-xl text-slate-700 font-semibold my-4" style="font-family: Helvetica, Arial, sans-serif;">Coding with Generative AI</p>
+                            <div class="flex flex-col sm:flex-row justify-between items-center mt-12 sm:mt-20 gap-8 sm:gap-0">
+                                <div class="text-center">
+                                    <p class="border-t-2 border-slate-500 px-4 pt-2 text-lg" style="font-style: italic;">Fajarudin Akbar</p>
+                                    <p class="text-sm text-slate-500 mt-1" style="font-family: Helvetica, Arial, sans-serif;">Instructor</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="border-t-2 border-slate-500 px-4 pt-2 text-lg">${currentDate}</p>
+                                    <p class="text-sm text-slate-500 mt-1" style="font-family: Helvetica, Arial, sans-serif;">Date</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+        
+        // --- Main App Rendering ---
+        function renderApp() {
+            const completedCount = Object.values(state.completedSections).filter(Boolean).length;
+            const progress = (completedCount / moduleData.sections.length) * 100;
+
+            const appContainer = document.getElementById('app-container');
+            appContainer.innerHTML = `
+                <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-4xl">
+                    <header class="mb-10 p-8 bg-white rounded-2xl shadow-md border border-gray-200">
+                        <p class="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-2">Go Beyond with AI</p>
+                        <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-3 tracking-tight">${moduleData.title}</h1>
+                        <p class="text-lg text-gray-600 mb-6">${moduleData.goal}</p>
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                            <span class="font-semibold text-gray-700">Tools Covered:</span>
+                            <div class="flex flex-wrap gap-2">
+                                ${moduleData.tools.map(tool => `<a href="${tool.url}" target="_blank" rel="noopener noreferrer" class="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm font-semibold rounded-full hover:bg-indigo-200 hover:text-indigo-900 transition-colors">${tool.name}</a>`).join('')}
+                            </div>
+                        </div>
+                         <div class="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between flex-wrap gap-4">
+                            <span class="font-semibold text-gray-700 text-base">Accessibility</span>
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm font-medium text-gray-600">Font Size</span>
+                                <button data-action="decrease-font" class="p-1 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all" aria-label="Decrease font size">
+                                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                                </button>
+                                <span id="font-size-display" class="font-bold text-gray-800 w-12 text-center text-base tabular-nums">${state.baseFontSize}px</span>
+                                <button data-action="increase-font" class="p-1 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all" aria-label="Increase font size">
+                                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+                    <div class="mb-10">
+                        <div class="flex justify-between items-center mb-2">
+                            <h2 class="text-lg font-bold text-gray-700">Your Progress</h2>
+                            <span id="progress-text" class="text-lg font-bold text-indigo-600">${Math.round(progress)}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-4">
+                            <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-4 rounded-full transition-all duration-500 ease-out" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                    <main class="space-y-6">
+                        ${moduleData.sections.map(section => `
+                            <div class="section-card bg-white rounded-2xl shadow-md border transition-all duration-300 ${state.completedSections[section.id] ? 'border-green-300 ring-2 ring-green-200' : 'border-gray-200'}" data-section-id="${section.id}">
+                                <div class="p-5 sm:p-6 cursor-pointer" data-action="toggle-section">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center gap-4">
+                                            <span class="text-3xl">${section.icon}</span>
+                                            <h3 class="text-xl sm:text-2xl font-bold text-gray-800">${section.title}</h3>
+                                        </div>
+                                        <div class="flex items-center gap-4">
+                                            ${state.completedSections[section.id] ? icons.CheckCircle : ''}
+                                            <span class="chevron-icon">${icons.ChevronDown}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="collapsible-content">
+                                    <div class="px-5 sm:px-6 pb-6 border-t border-gray-200">
+                                        <div class="mt-4 prose max-w-none">
+                                            ${renderSectionContent(section)}
+                                        </div>
+                                        <div class="mt-6 text-right">
+                                            <button data-action="toggle-complete" class="px-5 py-2 text-sm font-bold rounded-lg transition-colors transform hover:scale-105 ${state.completedSections[section.id] ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}">
+                                                ${state.completedSections[section.id] ? 'Completed!' : 'Mark as Complete'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`).join('')}
+                    </main>
+                    <div id="completion-block" class="mt-12 p-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl shadow-lg text-center text-white ${progress === 100 ? '' : 'hidden'}">
+                        <h3 class="text-3xl font-bold mb-2">Congratulations!</h3>
+                        <p class="opacity-90 mb-6">You've completed the module. Enter your name to generate your certificate.</p>
+                        <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                            <input id="name-input" type="text" placeholder="Enter your full name" class="px-4 py-2 border border-gray-300 rounded-lg w-full max-w-xs focus:ring-2 focus:ring-white outline-none text-gray-800" value="${state.userName}">
+                            <button id="generate-cert-btn" class="w-full sm:w-auto px-8 py-2.5 bg-white text-indigo-600 font-bold rounded-lg hover:bg-opacity-90 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all transform hover:scale-105" ${!state.userName ? 'disabled' : ''}>Generate Certificate</button>
+                        </div>
+                    </div>
+                    <footer class="text-center mt-12 text-gray-500">
+                        <p>Designed by <a href="https://linkedin.com/in/fajarudinakbar" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline font-semibold">Fajarudin Akbar</a></p>
+                    </footer>
+                </div>
+                <div id="certificate-container"></div>
+            `;
+            
+            // Re-attach all event listeners after re-rendering
+            attachEventListeners();
+            // Update UI elements that are not part of the main render loop
+            updateUI();
+        }
+        
+        // --- UI Update and Event Handlers ---
+        
+        function updateUI() {
+            // Font size
+            document.documentElement.style.fontSize = `${state.baseFontSize}px`;
+            const fontSizeDisplay = document.getElementById('font-size-display');
+            if(fontSizeDisplay) fontSizeDisplay.textContent = `${state.baseFontSize}px`;
+            
+            const decreaseBtn = document.querySelector('[data-action="decrease-font"]');
+            if(decreaseBtn) decreaseBtn.disabled = state.baseFontSize <= 12;
+
+            const increaseBtn = document.querySelector('[data-action="increase-font"]');
+            if(increaseBtn) increaseBtn.disabled = state.baseFontSize >= 24;
+
+            // Progress
+            const completedCount = Object.values(state.completedSections).filter(Boolean).length;
+            const progress = (completedCount / moduleData.sections.length) * 100;
+
+            const progressBar = document.getElementById('progress-bar');
+            if (progressBar) progressBar.style.width = `${progress}%`;
+            
+            const progressText = document.getElementById('progress-text');
+            if (progressText) progressText.textContent = `${Math.round(progress)}%`;
+
+            const completionBlock = document.getElementById('completion-block');
+            if (completionBlock) {
+                 completionBlock.classList.toggle('hidden', progress < 100);
+            }
+        }
+        
+        function handleAction(e) {
+            const target = e.target;
+            const action = target.closest('[data-action]')?.dataset.action;
+            if (!action) return;
+
+            const sectionCard = target.closest('.section-card');
+            const sectionId = sectionCard?.dataset.sectionId;
+
+            switch (action) {
+                case 'toggle-section':
+                    const content = sectionCard.querySelector('.collapsible-content');
+                    const icon = sectionCard.querySelector('.chevron-icon');
+                    content.classList.toggle('open');
+                    icon.innerHTML = content.classList.contains('open') ? icons.ChevronUp : icons.ChevronDown;
+                    break;
+                case 'toggle-complete':
+                    state.completedSections[sectionId] = !state.completedSections[sectionId];
+                    renderApp(); // Re-render to update completed state visually
+                    break;
+                case 'decrease-font':
+                    state.baseFontSize = Math.max(state.baseFontSize - 2, 12);
+                    updateUI();
+                    break;
+                case 'increase-font':
+                    state.baseFontSize = Math.min(state.baseFontSize + 2, 24);
+                    updateUI();
+                    break;
+                case 'answer-quiz':
+                    const questionDiv = target.closest('[data-quiz-question]');
+                    const value = target.dataset.value === 'true';
+                    const buttons = questionDiv.querySelectorAll('button');
+                    buttons.forEach(btn => {
+                        btn.classList.remove('bg-green-500', 'bg-red-500', 'text-white', 'ring-2', 'ring-green-300', 'ring-red-300');
+                        btn.classList.add('bg-gray-200');
+                    });
+                    target.classList.remove('bg-gray-200');
+                    if (value) {
+                         target.classList.add('bg-green-500', 'text-white', 'ring-2', 'ring-green-300');
+                    } else {
+                         target.classList.add('bg-red-500', 'text-white', 'ring-2', 'ring-red-300');
+                    }
+                    break;
+                case 'close-certificate':
+                     document.getElementById('certificate-container').innerHTML = '';
+                    break;
+                case 'download-pdf':
+                     handleDownloadPdf();
+                    break;
+            }
+        }
+
+        function handleInput(e) {
+            if (e.target.id === 'name-input') {
+                state.userName = e.target.value;
+                document.getElementById('generate-cert-btn').disabled = !state.userName.trim();
+            }
+        }
+        
+        function handleSubmit(e) {
+             if (e.target.id === 'generate-cert-btn') {
+                e.preventDefault();
+                if (state.userName.trim()) {
+                    document.getElementById('certificate-container').innerHTML = renderCertificate();
+                }
+            }
+        }
+        
+        function handleDownloadPdf() {
+            if (window.jspdf && window.html2canvas) {
+                const { jsPDF } = window.jspdf;
+                const input = document.getElementById('certificate-content');
+                if (input) {
+                    html2canvas(input, { scale: 2, useCORS: true, backgroundColor: null })
+                        .then((canvas) => {
+                            const imgData = canvas.toDataURL('image/png');
+                            const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width, canvas.height] });
+                            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                            pdf.save(`Certificate-${state.userName.replace(/\s+/g, '-')}.pdf`);
+                        });
+                }
+            } else {
+                console.error("PDF generation libraries not loaded yet.");
+                alert("Could not download PDF. Please wait a moment and try again.");
+            }
+        }
+        
+        function attachEventListeners() {
+            const container = document.getElementById('app-container');
+            container.removeEventListener('click', handleAction);
+            container.removeEventListener('input', handleInput);
+            container.removeEventListener('click', handleSubmit); // Use click for button submissions
+            
+            container.addEventListener('click', handleAction);
+            container.addEventListener('input', handleInput);
+            container.addEventListener('click', handleSubmit);
+        }
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderApp();
+        });
+
+    </script>
+</body>
+</html>
